@@ -52,6 +52,14 @@ const envSchema = z
         (val) => !val || val.startsWith("ws://") || val.startsWith("wss://"),
         { message: "PUBLIC_APP_WSS_URL must be ws:// or wss://" },
       ),
+    DB_FILE_NAME: z
+      .string()
+      .startsWith("file:", { message: "DB_FILE_NAME must start with file:" })
+      .refine(
+        (v) => v.length > "file:".length,
+        "DB_FILE_NAME must include a file name",
+      )
+      .default("file:sportz.db"),
   })
   .superRefine((env, ctx) => {
     // production: must be provided
