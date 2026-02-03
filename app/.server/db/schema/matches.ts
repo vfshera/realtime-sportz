@@ -1,4 +1,4 @@
-import { MATCH_STATUS, type MatchStatus } from "../consts";
+import { MATCH_STATUS, type MatchStatus } from "~/utils/match-status";
 import type { DefaultOmit } from "../types";
 import { primaryKeyCuid2, timestamps } from "../utils";
 import { sql } from "drizzle-orm";
@@ -13,7 +13,7 @@ export const matches = sqliteTable(
     awayTeam: text("away_team").notNull(),
     status: text("status").notNull().$type<MatchStatus>().default("scheduled"),
     startTime: integer("start_time", { mode: "timestamp" }).notNull(),
-    endTime: integer("end_time", { mode: "timestamp" }),
+    endTime: integer("end_time", { mode: "timestamp" }).notNull(),
     homeScore: integer("home_score").notNull().default(0),
     awayScore: integer("away_score").notNull().default(0),
     ...timestamps,
@@ -21,7 +21,11 @@ export const matches = sqliteTable(
   (t) => [
     check(
       "status_check",
-      sql`${t.status} in (${sql.raw(MATCH_STATUS.map((s) => `'${s}'`).join(","))})`,
+      sql`${t.status} in (${sql.raw(
+        Object.values(MATCH_STATUS)
+          .map((s) => `'${s}'`)
+          .join(","),
+      )})`,
     ),
   ],
 );
