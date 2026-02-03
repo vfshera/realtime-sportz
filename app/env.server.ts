@@ -44,10 +44,37 @@ const envSchema = z
       .default("development"),
 
     PUBLIC_APP_URL: z.url(),
+    PUBLIC_APP_WSS_URL: z
+      .url()
+      .optional()
+      .default("")
+      .refine(
+        (val) => !val || val.startsWith("ws://") || val.startsWith("wss://"),
+        { message: "PUBLIC_APP_WSS_URL must be ws:// or wss://" },
+      ),
+  })
+  .superRefine((env, ctx) => {
+    // production: must be provided
+    if (env.NODE_ENV === "production" && !env.PUBLIC_APP_WSS_URL) {
+      ctx.addIssue({
+        path: ["PUBLIC_APP_WSS_URL"],
+        message: "PUBLIC_APP_WSS_URL is required in production",
+        code: "custom",
+      });
+    }
   })
   .transform((env) => {
+    let wssUrl = env.PUBLIC_APP_WSS_URL;
+
+    // derive ONLY when not production
+    if (!wssUrl && env.NODE_ENV !== "production") {
+      const url = new URL(env.PUBLIC_APP_URL);
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      wssUrl = url.toString();
+    }
     return {
       ...env,
+      PUBLIC_APP_WSS_URL: wssUrl,
       PROD: env.NODE_ENV === "production",
       DEV: env.NODE_ENV === "development",
       TEST: env.NODE_ENV === "test",
