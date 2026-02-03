@@ -1,6 +1,7 @@
 import type { DefaultOmit } from "../types";
 import { primaryKeyCuid2, timestamps } from "../utils";
 import { matches } from "./matches";
+import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const commentary = sqliteTable(
@@ -25,6 +26,14 @@ export const commentary = sqliteTable(
     index("commentary_match_timeline_idx").on(t.matchId, t.minute, t.sequence),
   ],
 );
+
+export const commentaryRelations = relations(commentary, ({ one }) => ({
+  match: one(matches, {
+    fields: [commentary.matchId],
+    references: [matches.id],
+  }),
+}));
+
 export type Commentary = typeof commentary.$inferSelect;
 export type NewCommentary = Omit<typeof commentary.$inferInsert, DefaultOmit>;
 

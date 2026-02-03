@@ -1,2 +1,2 @@
-export { commentary } from "./commentary";
-export { matches } from "./matches";
+export * as commentary from "./commentary";
+export * as matches from "./matches";
