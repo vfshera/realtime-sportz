@@ -78,8 +78,11 @@ const envSchema = z
     if (!wssUrl && env.NODE_ENV !== "production") {
       const url = new URL(env.PUBLIC_APP_URL);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      //for this project use /ws as websocket path
+      url.pathname = "/ws";
       wssUrl = url.toString();
     }
+
     return {
       ...env,
       PUBLIC_APP_WSS_URL: wssUrl,
