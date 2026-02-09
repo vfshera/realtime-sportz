@@ -6,7 +6,6 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
-  useLoaderData,
 } from "react-router";
 import "./app.css";
 import { appContext } from "$/server/context";
@@ -20,7 +19,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap",
   },
 ];
 
@@ -41,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="h-full">
+      <body className="font-manrope text-text min-h-full bg-linear-[135deg] from-[#f5f5f5] to-[#e8e8e8] leading-[1.6]">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -67,7 +66,9 @@ export default function App({
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
+
   let details = "An unexpected error occurred.";
+
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
