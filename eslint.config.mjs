@@ -1,13 +1,12 @@
 import stylistic from "@stylistic/eslint-plugin";
-import teslintParser from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
-import teslint from "typescript-eslint";
+import tseslint from "typescript-eslint";
 
-export default defineConfig([
+export default defineConfig(
   {
     ignores: [
       "node_modules/",
@@ -17,7 +16,7 @@ export default defineConfig([
       "!**/server",
     ],
   },
-  teslint.configs.recommended,
+  tseslint.configs.strictTypeChecked,
   {
     files: ["**/*.{jsx,tsx,js,ts}"],
     ...reactPlugin.configs.flat.recommended,
@@ -31,7 +30,7 @@ export default defineConfig([
         ...globals.serviceworker,
         ...globals.browser,
       },
-      parser: teslintParser,
+      parser: tseslint.parser,
       parserOptions: {
         ...reactPlugin.configs.flat.recommended.languageOptions.parserOptions,
         ecmaVersion: "latest",
@@ -117,4 +116,4 @@ export default defineConfig([
     },
   },
   eslintConfigPrettier,
-]);
+);
