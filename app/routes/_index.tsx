@@ -2,6 +2,7 @@ import type { Route } from "./+types/_index";
 import { type CSSProperties, useState } from "react";
 import { Status } from "~/components/status.client";
 import Button from "~/components/ui/button";
+import { ClientOnly } from "remix-utils/client-only";
 
 const MATCHES = [
   {
@@ -152,8 +153,9 @@ export default function Index({ matches }: Route.ComponentProps) {
               Real-time match data demo
             </p>
           </div>
-
-          <Status wsUrl={clientEnv.APP_WSS_URL} />
+          <ClientOnly fallback={<div />}>
+            {() => <Status wsUrl={clientEnv.APP_WSS_URL} />}
+          </ClientOnly>
         </div>
       </header>
 

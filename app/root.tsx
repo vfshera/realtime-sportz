@@ -1,4 +1,5 @@
 import type { Route } from "./+types/root";
+import type { ReactNode } from "react";
 import {
   Links,
   Meta,
@@ -6,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
+  useRouteLoaderData,
 } from "react-router";
 import "./app.css";
 import { appContext } from "$/server/context";
@@ -31,7 +33,11 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>("root");
+
+  const clientEnv = data?.clientEnv;
+
   return (
     <html lang="en">
       <head>
@@ -42,6 +48,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-manrope text-text min-h-full bg-linear-[135deg] from-[#f5f5f5] to-[#e8e8e8] leading-[1.6]">
         {children}
+        {clientEnv && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.ENV = ${JSON.stringify(clientEnv)}`,
+            }}
+          ></script>
+        )}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -49,19 +62,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App({
-  loaderData: { clientEnv },
-}: Route.ComponentProps) {
-  return (
-    <>
-      <Outlet />;
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.ENV = ${JSON.stringify(clientEnv)}`,
-        }}
-      ></script>
-    </>
-  );
+export default function App() {
+  return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
