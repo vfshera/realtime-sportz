@@ -206,14 +206,18 @@ export default function Index({ matches }: Route.ComponentProps) {
                   <div className="match-actions flex gap-3">
                     <Button
                       variant="primary"
-                      onClick={() => setSelectedMatch(match)}
+                      onClick={() => {
+                        setSelectedMatch(match);
+                      }}
                     >
                       View Recap
                     </Button>
                     {selectedMatch?.id === match.id && (
                       <Button
                         variant="secondary"
-                        onClick={() => setSelectedMatch(null)}
+                        onClick={() => {
+                          setSelectedMatch(null);
+                        }}
                       >
                         Close
                       </Button>

@@ -5,7 +5,11 @@ import { createMatchSchema } from "~/validations/matches";
 import { appContext } from "$/server/context";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const raw = await request.json();
+  const raw = (await request.json()) as {
+    startTime: string;
+    endTime: string;
+  };
+
   const res = createMatchSchema.safeParse({
     ...raw,
     startTime: new Date(raw.startTime),
@@ -36,9 +40,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   return data({ ok: true, data: newMatch });
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const { db } = context.get(appContext);
 
   const allMatches = await db.query.matches.findMany();
+
   return data({ data: allMatches, ok: true });
 }

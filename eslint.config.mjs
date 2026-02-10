@@ -36,6 +36,7 @@ export default defineConfig([
         ecmaVersion: "latest",
         sourceType: "module",
         tsconfigRootDir: import.meta.dirname,
+        projectService: true,
       },
     },
 
@@ -51,6 +52,7 @@ export default defineConfig([
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "@typescript-eslint/restrict-template-expressions": "off",
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
       "react/prop-types": "off",
