@@ -94,7 +94,7 @@ const envSchema = z
 
 export type Env = z.infer<typeof envSchema>;
 
-export const env = loadEnv(envSchema);
+export const env = Object.freeze(loadEnv(envSchema));
 
 /**
  * Extract public env keys.
@@ -115,7 +115,7 @@ function getPublicEnv() {
     }
   }
 
-  return publicEnv as PublicEnv;
+  return Object.freeze(publicEnv as PublicEnv);
 }
 
 export const clientEnv = getPublicEnv();
