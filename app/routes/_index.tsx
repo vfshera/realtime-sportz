@@ -1,6 +1,6 @@
 import type { Route } from "./+types/_index";
 import { type CSSProperties, useState } from "react";
-import { Status } from "~/components/status.client";
+import { Status } from "~/components/status";
 import Button from "~/components/ui/button";
 import { ClientOnly } from "remix-utils/client-only";
 
@@ -147,7 +147,7 @@ export default function Index({ matches }: Route.ComponentProps) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-dark text-[2rem] font-extrabold -tracking-[2px] md:text-4xl">
-              Spotrz
+              Sportz
             </h1>
             <p className="text-dark text-sm font-medium opacity-70">
               Real-time match data demo
@@ -173,6 +173,7 @@ export default function Index({ matches }: Route.ComponentProps) {
           <div className="grid gap-5 xl:grid-cols-2">
             {MATCHES.map((match, i) => (
               <div
+                key={match.id}
                 className="match-card animate-slide-up border-dark rounded-2xl border-3 bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] transition-all delay-(--delay,0.1s) duration-300 ease-linear hover:-translate-y-1 hover:shadow-[12px_12px_0_rgba(0,0,0,0.15)] md:p-6"
                 style={{ "--delay": `${i * 0.1}s` } as CSSProperties}
               >
@@ -294,9 +295,8 @@ export default function Index({ matches }: Route.ComponentProps) {
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       className="size-8 text-gray-900"
                     >
                       <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" />
