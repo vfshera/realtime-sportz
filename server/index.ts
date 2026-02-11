@@ -44,7 +44,7 @@ export default await createHonoServer<AppBindings>({
       })),
     );
   },
-  getLoadContext: async function (ctx, { build }) {
+  getLoadContext: (ctx, { build }) => {
     const context = new RouterContextProvider();
 
     context.set(appContext, {

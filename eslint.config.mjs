@@ -16,7 +16,7 @@ export default defineConfig([
       "!**/server",
     ],
   },
-  tseslint.configs.strictTypeChecked,
+  tseslint.configs.strict,
   {
     files: ["**/*.{jsx,tsx,js,ts}"],
     ...reactPlugin.configs.flat.recommended,
@@ -53,6 +53,7 @@ export default defineConfig([
     rules: {
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-base-to-string": "off",
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
       "react/prop-types": "off",

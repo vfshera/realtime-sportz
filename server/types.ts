@@ -2,7 +2,7 @@ import type { DB } from "~/.server/db";
 import type { Env, PublicEnv } from "~/env.server";
 import type { RequestIdVariables } from "hono/request-id";
 
-export type SessionVariables = {};
+export type SessionVariables = object;
 
 export type AppBindings = {
   Variables: SessionVariables & RequestIdVariables;
