@@ -21,9 +21,11 @@ function useProvideWebSocket(url: string) {
   const isConnected = readyState === ReadyState.OPEN;
 
   const send = useCallback(
-    (message: ClientMessage) => {
-      if (!isConnected) return;
+    (message: ClientMessage): boolean => {
+      if (!isConnected) return false;
       sendJsonMessage(message);
+
+      return true;
     },
     [isConnected, sendJsonMessage],
   );
@@ -35,7 +37,13 @@ function useProvideWebSocket(url: string) {
       if (subs.has(matchId)) return;
 
       subs.add(matchId);
-      send({ type: "subscribe", payload: { matchId } });
+      const sent = send({ type: "subscribe", payload: { matchId } });
+
+      if (!sent) {
+        console.warn(
+          `Failed to subscribe to match ${matchId}: WebSocket not connected`,
+        );
+      }
     },
     [send],
   );
@@ -47,7 +55,13 @@ function useProvideWebSocket(url: string) {
       if (!subs.has(matchId)) return;
 
       subs.delete(matchId);
-      send({ type: "unsubscribe", payload: { matchId } });
+      const sent = send({ type: "unsubscribe", payload: { matchId } });
+
+      if (!sent) {
+        console.warn(
+          `Failed to unsubscribe from match ${matchId}: WebSocket not connected`,
+        );
+      }
     },
     [send],
   );
@@ -56,7 +70,11 @@ function useProvideWebSocket(url: string) {
     if (!isConnected) return;
 
     subsRef.current.forEach((matchId) => {
-      send({ type: "subscribe", payload: { matchId } });
+      const sent = send({ type: "subscribe", payload: { matchId } });
+
+      if (!sent) {
+        console.warn(`Failed to resubscribe to match ${matchId} on reconnect`);
+      }
     });
   }, [isConnected, send]);
 
