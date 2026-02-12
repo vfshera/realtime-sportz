@@ -47,21 +47,26 @@ class MatchPubSub {
     if (!room) return;
 
     for (const client of room) {
-      if (client.readyState === 1) {
-        client.send(JSON.stringify(payload));
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(JSON.stringify(payload));
+        } catch (error) {
+          console.error(`Failed to send message to client: ${error}`);
+        }
       }
     }
   }
 
   removeSocket(ws: NodeWSContext) {
     const subscriptions = ws.raw!.subscriptions;
-    if (!subscriptions) return;
 
-    for (const matchId of subscriptions) {
-      this.#matchRooms.get(matchId)?.delete(ws);
+    if (subscriptions) {
+      for (const matchId of subscriptions) {
+        this.#matchRooms.get(matchId)?.delete(ws);
 
-      if (this.#matchRooms.get(matchId)?.size === 0) {
-        this.#matchRooms.delete(matchId);
+        if (this.#matchRooms.get(matchId)?.size === 0) {
+          this.#matchRooms.delete(matchId);
+        }
       }
     }
 
