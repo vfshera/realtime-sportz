@@ -1,9 +1,8 @@
 import type { Route } from "./+types/_index";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import Button from "~/components/ui/button";
 import { WebSocketProvider, useWebSocketContext } from "~/providers";
 import { cn } from "~/utils/styling";
-import { ReadyState } from "react-use-websocket";
 import { ClientOnly } from "remix-utils/client-only";
 
 const MATCHES = [
@@ -155,9 +154,15 @@ export default function Index({ matches }: Route.ComponentProps) {
 function HomePage() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-  const { subscribe, unsubscribe, readyState } = useWebSocketContext();
+  const { subscribe, unsubscribe, isConnected, on } = useWebSocketContext();
 
-  const isOnline = readyState === ReadyState.OPEN;
+  useEffect(() => {
+    const cleanup = on("welcome", (payload) => {
+      console.log(`Received welcome message from server: '${payload}'`);
+    });
+
+    return cleanup;
+  }, [on]);
 
   return (
     <main className="mx-auto w-full max-w-300 pt-8">
@@ -175,10 +180,10 @@ function HomePage() {
             <div
               className={cn(
                 "status-dot size-2.5 rounded-full",
-                isOnline ? "bg-green-500" : "bg-text-secondary",
+                isConnected ? "bg-green-500" : "bg-text-secondary",
               )}
             />
-            {isOnline ? "ONLINE" : "OFFLINE"}
+            {isConnected ? "ONLINE" : "OFFLINE"}
           </div>
         </div>
       </header>
@@ -280,7 +285,10 @@ function HomePage() {
 
               <div className="commentary-feed flex-1 overflow-y-auto pr-3">
                 {COMMENTARY_ITEMS.map((item, i) => (
-                  <div className="commentary-item animate-slide-in-comment mb-4">
+                  <div
+                    key={i}
+                    className="commentary-item animate-slide-in-comment mb-4"
+                  >
                     <div className="text-text-secondary mb-2 flex items-center gap-3">
                       <div className="commentary-time font-space-mono text-xs font-bold">
                         {item.time}

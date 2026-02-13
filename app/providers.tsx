@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-dynamic-delete */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   type ReactNode,
   createContext,
@@ -7,18 +9,74 @@ import {
   useMemo,
   useRef,
 } from "react";
-import type { ClientMessage } from "./types";
+import type { ClientMessage, ServerMessage } from "./types/ws";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+
+type PayloadOf<T extends ServerMessage["type"]> = Extract<
+  ServerMessage,
+  { type: T }
+>["payload"];
+
+type ListenerMap = {
+  [K in ServerMessage["type"]]?: Set<(payload: PayloadOf<K>) => void>;
+};
 
 function useProvideWebSocket(url: string) {
   const subsRef = useRef<Set<number>>(new Set());
 
   const { sendJsonMessage, readyState } = useWebSocket(url, {
+    onMessage: (event) => {
+      try {
+        const msg = JSON.parse(event.data) as ServerMessage;
+        emit(msg.type, msg.payload);
+      } catch {
+        console.error("Bad WS message", event.data);
+      }
+    },
     shouldReconnect: () => true,
     reconnectInterval: 5000,
   });
 
   const isConnected = readyState === ReadyState.OPEN;
+
+  const listenersRef = useRef<ListenerMap>({});
+
+  const on = useCallback(
+    <T extends ServerMessage["type"]>(
+      type: T,
+      cb: (payload: PayloadOf<T>) => void,
+    ) => {
+      const map = listenersRef.current;
+
+      let set = map[type] as Set<(payload: PayloadOf<T>) => void> | undefined;
+
+      if (!set) {
+        set = new Set();
+        map[type] = set as ListenerMap[T];
+      }
+
+      set.add(cb);
+
+      return () => {
+        set!.delete(cb);
+        if (set!.size === 0) {
+          delete map[type];
+        }
+      };
+    },
+    [],
+  );
+
+  function emit<T extends ServerMessage["type"]>(
+    type: T,
+    payload: PayloadOf<T>,
+  ) {
+    const set = listenersRef.current[type] as
+      | Set<(payload: PayloadOf<T>) => void>
+      | undefined;
+
+    set?.forEach((cb) => cb(payload));
+  }
 
   const send = useCallback(
     (message: ClientMessage): boolean => {
@@ -79,14 +137,8 @@ function useProvideWebSocket(url: string) {
   }, [isConnected, send]);
 
   return useMemo(
-    () => ({
-      send,
-      subscribe,
-      unsubscribe,
-      readyState,
-      isConnected,
-    }),
-    [send, subscribe, unsubscribe, readyState, isConnected],
+    () => ({ on, send, subscribe, unsubscribe, readyState, isConnected }),
+    [send, subscribe, unsubscribe, readyState, isConnected, on],
   );
 }
 
