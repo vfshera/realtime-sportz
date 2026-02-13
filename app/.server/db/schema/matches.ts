@@ -31,6 +31,7 @@ export const matches = sqliteTable(
 );
 
 export type Match = typeof matches.$inferSelect;
+
 export type NewMatch = Omit<typeof matches.$inferInsert, DefaultOmit>;
 
 export default matches;
