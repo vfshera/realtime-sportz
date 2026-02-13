@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import type { NodeWSContext } from "../types";
+import type { NodeWSContext, ServerMessage } from "~/types/ws";
 
 class MatchPubSub {
   #matchRooms = new Map<string, Set<NodeWSContext>>();
@@ -11,14 +11,27 @@ class MatchPubSub {
   }
 
   addSocket(ws: NodeWSContext) {
-    ws.raw!.isAlive = true;
-    ws.raw!.on("pong", () => {
-      console.log("Pong received!");
-      ws.raw!.isAlive = true;
-    });
-    this.#sockets.add(ws);
-  }
+    const rawWS = ws.raw!;
 
+    rawWS.isAlive = true;
+    rawWS.on("pong", () => {
+      console.log("Pong received!");
+      rawWS.isAlive = true;
+    });
+
+    this.#sockets.add(ws);
+
+    this.welcome(ws);
+  }
+  welcome(ws: NodeWSContext, message = "Welcome!") {
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({ type: "welcome", payload: message }));
+      } catch (error) {
+        console.error(`Failed to send welcome message: ${error}`);
+      }
+    }
+  }
   subscribe(ws: NodeWSContext, matchId: string) {
     const socket = ws.raw!;
 
@@ -42,7 +55,7 @@ class MatchPubSub {
     }
   }
 
-  publish(matchId: string, payload: unknown) {
+  broadcast(matchId: string, payload: ServerMessage) {
     const room = this.#matchRooms.get(matchId);
     if (!room) return;
 

@@ -1,4 +1,5 @@
-import type { AppBindings, RawWebSocket } from "../types";
+import type { ClientMessage, RawWebSocket } from "~/types/ws";
+import type { AppBindings } from "../types";
 import { pubsub } from "./pubsub";
 import type { Context } from "hono";
 import type { WSEvents } from "hono/ws";
@@ -15,7 +16,7 @@ export function createWSHandler(
 
     onMessage(event, ws) {
       try {
-        const data = JSON.parse(event.data.toString());
+        const data = JSON.parse(event.data.toString()) as ClientMessage;
         console.log("Received message:", data);
       } catch (err) {
         console.error("Failed to parse message:", err);
