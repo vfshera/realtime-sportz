@@ -6,18 +6,22 @@ export async function action({ request }: Route.ActionArgs) {
 
   const intent = form.get("intent");
 
-  switch (intent) {
-    case "start": {
-      await startSimulation();
-      break;
-    }
+  try {
+    switch (intent) {
+      case "start": {
+        await startSimulation();
+        break;
+      }
 
-    case "stop": {
-      stopSimulation();
-      break;
+      case "stop": {
+        stopSimulation();
+        break;
+      }
+      default:
+        return { ok: false, error: "Invalid intent" };
     }
-    default:
-      return { ok: false, error: "Invalid intent" };
+  } catch (err) {
+    return { ok: false, error: String(err) };
   }
 
   return { ok: true };

@@ -8,20 +8,30 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 export async function simulateMatchCreation() {
   for (const raw of getMatches()) {
-    const [match] = await db
-      .insert(matches)
-      .values({
-        ...raw,
-        status: "live",
-      })
-      .returning();
+    try {
+      const [match] = await db
+        .insert(matches)
+        .values({
+          ...raw,
+          status: "live",
+        })
+        .returning();
 
-    pubsub.broadcast(match.id, {
-      type: "match.created",
-      payload: match,
-    });
+      pubsub.broadcast(match.id, {
+        type: "match.created",
+        payload: match,
+      });
 
-    await sleep(2000);
+      await sleep(2000);
+    } catch (err) {
+      console.error("simulateMatchCreation: failed to insert match", {
+        raw,
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      // on failure: do not broadcast or sleep, continue with next match
+      continue;
+    }
   }
 }
 
@@ -59,8 +69,8 @@ export function simulateCommentary(dbMatchId: string, rawMatchId: number) {
         await db
           .update(matches)
           .set({
-            homeScore: sql`${matches.homeScore} + ${event.scoreDelta.home}`,
-            awayScore: sql`${matches.awayScore} + ${event.scoreDelta.away}`,
+            homeScore: sql`${matches.homeScore} + ${scoreDelta.home}`,
+            awayScore: sql`${matches.awayScore} + ${scoreDelta.away}`,
           })
           .where(eq(matches.id, dbMatchId));
       }
