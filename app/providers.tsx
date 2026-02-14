@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
 } from "react";
+import type { Match } from "./.server/db/schema";
 import type { ClientMessage, ServerMessage } from "./types/ws";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
@@ -22,7 +23,7 @@ type ListenerMap = {
 };
 
 function useProvideWebSocket(url: string) {
-  const subsRef = useRef<Set<number>>(new Set());
+  const subsRef = useRef<Set<Match["id"]>>(new Set());
 
   const { sendJsonMessage, readyState } = useWebSocket(url, {
     onMessage: (event) => {
@@ -89,7 +90,7 @@ function useProvideWebSocket(url: string) {
   );
 
   const subscribe = useCallback(
-    (matchId: number) => {
+    (matchId: Match["id"]) => {
       const subs = subsRef.current;
 
       if (subs.has(matchId)) return;
@@ -107,7 +108,7 @@ function useProvideWebSocket(url: string) {
   );
 
   const unsubscribe = useCallback(
-    (matchId: number) => {
+    (matchId: Match["id"]) => {
       const subs = subsRef.current;
 
       if (!subs.has(matchId)) return;
