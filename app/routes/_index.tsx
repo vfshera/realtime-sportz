@@ -377,7 +377,7 @@ export function Skeleton() {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className="rounded-2xl border-3 border-black bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] md:p-6"
