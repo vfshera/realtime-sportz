@@ -14,6 +14,7 @@ export function getMatchStatus(
   now = new Date(),
 ): MatchStatus | null {
   const start = new Date(startTime);
+
   const end = new Date(endTime);
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
@@ -36,12 +37,15 @@ export async function syncMatchStatus(
   updateStatus: (status: MatchStatus) => Promise<void>,
 ) {
   const nextStatus = getMatchStatus(match.startTime, match.endTime);
+
   if (!nextStatus) {
     return match.status;
   }
+
   if (match.status !== nextStatus) {
     await updateStatus(nextStatus);
     match.status = nextStatus;
   }
+
   return match.status;
 }
