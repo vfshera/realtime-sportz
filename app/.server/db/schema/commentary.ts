@@ -8,7 +8,7 @@ export const commentary = sqliteTable(
   "commentary",
   {
     id: primaryKeyCuid2,
-    matchId: integer("match_id")
+    matchId: text("match_id")
       .notNull()
       .references(() => matches.id, { onDelete: "cascade" }),
     minute: integer("minute").notNull(),
@@ -35,6 +35,7 @@ export const commentaryRelations = relations(commentary, ({ one }) => ({
 }));
 
 export type Commentary = typeof commentary.$inferSelect;
+
 export type NewCommentary = Omit<typeof commentary.$inferInsert, DefaultOmit>;
 
 export default commentary;
