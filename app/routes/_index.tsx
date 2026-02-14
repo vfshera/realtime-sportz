@@ -5,6 +5,7 @@ import type { Match } from "~/.server/db/schema";
 import HomeSkeleton from "~/components/HomeSkeleton";
 import Button from "~/components/ui/button";
 import { WebSocketProvider, useWebSocketContext } from "~/providers";
+import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
 import { appContext } from "$/server/context";
 import { ClientOnly } from "remix-utils/client-only";
@@ -32,18 +33,6 @@ export default function Index({
       )}
     </ClientOnly>
   );
-}
-
-/**
- * Given a match, returns an array of two objects containing the home team name and score, and the away team name and score.
- * @param {Match} match - The match object.
- * @returns {Array<{name: string, score: number}>} - An array of two objects containing the team name and score for both home and away teams.
- */
-function collectTeams(match: Match) {
-  return [
-    { name: match.homeTeam, score: match.homeScore },
-    { name: match.awayTeam, score: match.awayScore },
-  ];
 }
 
 function HomePage({

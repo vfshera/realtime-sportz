@@ -1,4 +1,4 @@
-import type { Route } from "./+types/system.simulation";
+import type { Route } from "./+types/api.simulation";
 import { startSimulation, stopSimulation } from "~/.server/simulator";
 
 export async function action({ request }: Route.ActionArgs) {

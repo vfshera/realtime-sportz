@@ -49,3 +49,15 @@ export async function syncMatchStatus(
 
   return match.status;
 }
+
+/**
+ * Given a match, returns an array of two objects containing the home team name and score, and the away team name and score.
+ * @param {Match} match - The match object.
+ * @returns {Array<{name: string, score: number}>} - An array of two objects containing the team name and score for both home and away teams.
+ */
+export function collectTeams(match: Match) {
+  return [
+    { name: match.homeTeam, score: match.homeScore },
+    { name: match.awayTeam, score: match.awayScore },
+  ];
+}
