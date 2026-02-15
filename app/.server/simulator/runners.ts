@@ -1,4 +1,5 @@
 import { getCommentary, getMatches } from "~/data/loader.server";
+import { getMatchStatus } from "~/utils/match";
 import { db } from "../db";
 import { commentary, matches } from "../db/schema";
 import { simulationState } from "./state";
@@ -13,7 +14,7 @@ export async function simulateMatchCreation() {
         .insert(matches)
         .values({
           ...raw,
-          status: "live",
+          status: getMatchStatus(raw.startTime, raw.endTime) || "scheduled",
         })
         .returning();
 
@@ -22,7 +23,7 @@ export async function simulateMatchCreation() {
         payload: match,
       });
 
-      await sleep(2000);
+      await sleep(3500);
     } catch (err) {
       console.error("simulateMatchCreation: failed to insert match", {
         raw,

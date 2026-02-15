@@ -1,5 +1,10 @@
 import type { Route } from "./+types/api.simulation";
-import { startSimulation, stopSimulation } from "~/.server/simulator";
+import { useFetcher } from "react-router";
+import {
+  restartSimulation,
+  startSimulation,
+  stopSimulation,
+} from "~/.server/simulator";
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
@@ -17,6 +22,11 @@ export async function action({ request }: Route.ActionArgs) {
         stopSimulation();
         break;
       }
+
+      case "restart": {
+        await restartSimulation();
+        break;
+      }
       default:
         return { ok: false, error: "Invalid intent" };
     }
@@ -25,4 +35,14 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   return { ok: true };
+}
+
+export function useSimulationFetcher() {
+  const fetcher = useFetcher();
+
+  return {
+    ...fetcher,
+    submit: (intent: "start" | "stop" | "restart") =>
+      fetcher.submit({ intent }, { method: "post", action: "/api/simulation" }),
+  };
 }

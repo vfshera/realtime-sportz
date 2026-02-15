@@ -1,34 +1,46 @@
 import type { Route } from "./+types/_index";
 import { type CSSProperties, useEffect, useState } from "react";
-import { useFetcher } from "react-router";
 import type { Match } from "~/.server/db/schema";
 import HomeSkeleton from "~/components/HomeSkeleton";
 import Button from "~/components/ui/button";
 import { WebSocketProvider, useWebSocketContext } from "~/providers";
+import { getTodayUtcRange } from "~/utils/date";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
+import { useSimulationFetcher } from "./api.simulation";
 import { appContext } from "$/server/context";
 import { ClientOnly } from "remix-utils/client-only";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { db } = context.get(appContext);
 
-  const allMatches = await db.query.matches.findMany({});
+  const { endOfToday, startOfToday } = getTodayUtcRange();
 
-  return { allMatches };
+  const todaysMatches = await db.query.matches.findMany({
+    where: (m, { and, gte, lt }) =>
+      and(
+        gte(m.startTime, new Date(startOfToday)),
+        lt(m.startTime, new Date(endOfToday)),
+      ),
+  });
+
+  const hasLiveMatches = todaysMatches.some((m) => {
+    const now = Date.now();
+
+    return m.startTime.getTime() <= now && now < m.endTime.getTime();
+  });
+
+  return { todaysMatches, hasLiveMatches };
 }
 
-export default function Index({
-  matches,
-  loaderData: { allMatches },
-}: Route.ComponentProps) {
+export default function Index({ matches, loaderData }: Route.ComponentProps) {
   const { clientEnv } = matches[0].loaderData;
 
   return (
     <ClientOnly fallback={<HomeSkeleton />}>
       {() => (
         <WebSocketProvider url={clientEnv.APP_WSS_URL}>
-          <HomePage allMatches={allMatches} />
+          <HomePage {...loaderData} />
         </WebSocketProvider>
       )}
     </ClientOnly>
@@ -36,15 +48,14 @@ export default function Index({
 }
 
 function HomePage({
-  allMatches,
-}: {
-  allMatches: Route.ComponentProps["loaderData"]["allMatches"];
-}) {
-  const [matches, setMatches] = useState(allMatches);
+  todaysMatches,
+  hasLiveMatches,
+}: Route.ComponentProps["loaderData"]) {
+  const [matches, setMatches] = useState(todaysMatches);
 
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-  const fetcher = useFetcher();
+  const fetcher = useSimulationFetcher();
 
   const { subscribe, unsubscribe, isConnected, on } = useWebSocketContext();
 
@@ -89,6 +100,20 @@ function HomePage({
         </div>
       </header>
 
+      {!hasLiveMatches && (
+        <div className="py-12">
+          <div className="flex flex-col items-center gap-4">
+            <h2 className="text-2xl font-bold -tracking-[1px]">
+              Seems like there are no live matches now.
+            </h2>
+
+            <Button variant="primary" onClick={() => fetcher.submit("restart")}>
+              Restart Simulation
+            </Button>
+          </div>
+        </div>
+      )}
+
       {!!matches?.length ? (
         <>
           <div className="animate-fade-in grid grid-cols-1 gap-6 py-8 min-[1200px]:grid-cols-[1fr_420px]">
@@ -120,6 +145,7 @@ function HomePage({
                           {match.status}
                         </div>
                       </div>
+
                       <div className="teams mb-6 divide-y-2 divide-[#f0f0f0]">
                         {teams.map((team) => (
                           <div
@@ -137,7 +163,7 @@ function HomePage({
                       </div>
                       <div className="mt5 flex items-center justify-between border-t-2 border-[#f0f0f0] pt-5">
                         <div className="match-time text-text-secondary font-space-mono text-[13px] font-semibold">
-                          {/* {match.time} */}
+                          {match.startTime.toLocaleTimeString()}
                         </div>
                         <div className="match-actions flex gap-3">
                           <Button
@@ -262,19 +288,15 @@ function HomePage({
         </>
       ) : (
         <div className="py-8">
-          <fetcher.Form
-            method="post"
-            action="/system/simulation"
-            className="flex flex-col items-center gap-4"
-          >
+          <div className="flex flex-col items-center gap-4">
             <h2 className="text-2xl font-bold -tracking-[1px]">
               No matches available
             </h2>
 
-            <Button type="submit" variant="primary" name="intent" value="start">
+            <Button variant="primary" onClick={() => fetcher.submit("start")}>
               Start Simulation
             </Button>
-          </fetcher.Form>
+          </div>
         </div>
       )}
     </main>
