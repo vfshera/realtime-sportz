@@ -1,4 +1,4 @@
-import { MATCH_STATUS, type MatchStatus } from "~/utils/match-status";
+import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
 import type { DefaultOmit } from "../types";
 import { primaryKeyCuid2, timestamps } from "../utils";
 import { sql } from "drizzle-orm";
