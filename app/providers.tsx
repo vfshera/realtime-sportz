@@ -10,7 +10,10 @@ import {
   useRef,
 } from "react";
 import type { Match } from "./.server/db/schema";
-import type { ClientMessage, ServerMessage } from "./types/ws";
+import type {
+  ClientMessage,
+  ServerMessage,
+} from "./validations/transport/messages";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
 type PayloadOf<T extends ServerMessage["type"]> = Extract<

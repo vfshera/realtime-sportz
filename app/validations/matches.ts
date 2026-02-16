@@ -1,6 +1,6 @@
 import matches from "~/.server/db/schema/matches";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 /**
  * Schema for creating a match
@@ -8,6 +8,7 @@ import { z } from "zod/v4";
 export const createMatchSchema = createInsertSchema(matches).superRefine(
   (data, ctx) => {
     const start = new Date(data.startTime);
+
     const end = new Date(data.endTime);
 
     if (
