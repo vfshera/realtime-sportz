@@ -60,6 +60,16 @@ const envSchema = z
         "DB_FILE_NAME must include a file name",
       )
       .default("file:sportz.db"),
+
+    // Rate Limiting
+    RATE_LIMIT_HTTP_MAX_REQUESTS: z.coerce.number().int().min(10).default(50),
+    RATE_LIMIT_HTTP_WINDOW_SEC: z.coerce.number().min(5).default(10),
+    RATE_LIMIT_WS_MAX_CONNECTIONS: z.coerce.number().int().min(1).default(5),
+    RATE_LIMIT_WS_CONNECTION_WINDOW_SEC: z.coerce.number().min(1).default(2),
+    RATE_LIMIT_WS_MAX_MESSAGES: z.coerce.number().int().min(5).default(20),
+    RATE_LIMIT_WS_MESSAGE_WINDOW_SEC: z.coerce.number().min(2).default(5),
+
+    TRUST_PROXY: z.coerce.boolean().default(false),
   })
   .superRefine((env, ctx) => {
     // production: must be provided
