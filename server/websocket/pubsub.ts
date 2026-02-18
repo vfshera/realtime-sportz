@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { NodeWSContext } from "~/types/ws";
 import type { ServerMessage } from "~/validations/transport/messages";
+import { sendMessage } from "./helpers";
 
 class MatchPubSub {
   #matchRooms = new Map<string, Set<NodeWSContext>>();
@@ -11,22 +12,6 @@ class MatchPubSub {
 
   constructor() {
     this.startHeartbeat();
-  }
-
-  sendMessage(ws: NodeWSContext, message: ServerMessage): boolean {
-    if (ws.readyState !== WebSocket.OPEN) {
-      return false;
-    }
-
-    try {
-      ws.send(JSON.stringify(message));
-
-      return true;
-    } catch (error) {
-      console.error("Failed to send message:", error);
-
-      return false;
-    }
   }
 
   addSocket(ws: NodeWSContext) {
@@ -44,7 +29,7 @@ class MatchPubSub {
   }
 
   welcome(ws: NodeWSContext, message = "Welcome!"): void {
-    this.sendMessage(ws, { type: "welcome", payload: { message } });
+    sendMessage(ws, { type: "welcome", payload: { message } });
   }
 
   subscribe(ws: NodeWSContext, matchId: string): boolean {
@@ -111,7 +96,7 @@ class MatchPubSub {
 
     for (const client of room) {
       if (client.readyState === WebSocket.OPEN) {
-        this.sendMessage(client, message);
+        sendMessage(client, message);
       }
     }
   }
