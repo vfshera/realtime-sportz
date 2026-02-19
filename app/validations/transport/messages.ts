@@ -66,7 +66,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
     payload: matchPayloadSchema,
   }),
   z.object({
-    type: z.literal("match.commentary"),
+    type: z.literal("commentary.created"),
     payload: commentaryPayloadSchema,
   }),
   z.object({

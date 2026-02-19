@@ -61,7 +61,7 @@ export function simulateCommentary(dbMatchId: string, rawMatchId: number) {
           actor: event.actor,
           message: event.message,
           tags: JSON.stringify(event.tags),
-          metadata: scoreDelta ? JSON.stringify({ scoreDelta }) : undefined,
+          metadata: scoreDelta ? { scoreDelta } : undefined,
         })
         .returning();
 
