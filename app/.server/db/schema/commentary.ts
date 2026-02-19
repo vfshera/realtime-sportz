@@ -1,7 +1,7 @@
 import type { DefaultOmit } from "../types";
 import { primaryKeyCuid2, timestamps } from "../utils";
 import { matches } from "./matches";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const commentary = sqliteTable(
@@ -18,7 +18,10 @@ export const commentary = sqliteTable(
     actor: text("actor"),
     team: text("team"),
     message: text("message").notNull(),
-    metadata: text("metadata", { mode: "json" }),
+    metadata: text("metadata", { mode: "json" })
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'`),
     tags: text("tags"),
     ...timestamps,
   },
