@@ -7,10 +7,6 @@ import { WebSocketProvider, useWebSocketContext } from "~/providers";
 import { getTodayUtcRange } from "~/utils/date";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
-import {
-  matchPayloadSchema,
-  welcomePayloadSchema,
-} from "~/validations/transport/messages";
 import { useSimulationFetcher } from "./api.simulation";
 import { appContext } from "$/server/context";
 import { ClientOnly } from "remix-utils/client-only";
@@ -64,28 +60,14 @@ function HomePage({
   const { subscribe, unsubscribe, isConnected, on } = useWebSocketContext();
 
   useEffect(() => {
-    const offWelcome = on("welcome", (payload) => {
-      const result = welcomePayloadSchema.safeParse(payload);
-
-      if (!result.success) {
-        return;
-      }
-
-      const { message } = result.data;
+    const offWelcome = on("welcome", ({ message }) => {
       console.log(`Received welcome message from server: '${message}'`);
     });
 
     const offMatchCreated = on("match.created", (payload) => {
-      const result = matchPayloadSchema.safeParse(payload);
+      console.log("New match created: ", payload);
 
-      if (!result.success) {
-        return;
-      }
-
-      const match = result.data;
-      console.log("New match created:", match);
-
-      setMatches((prev) => [match, ...prev]);
+      setMatches((prev) => [payload, ...prev]);
     });
 
     return () => {

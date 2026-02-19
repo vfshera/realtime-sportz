@@ -10,9 +10,10 @@ import {
   useRef,
 } from "react";
 import type { Match } from "./.server/db/schema";
-import type {
-  ClientMessage,
-  ServerMessage,
+import {
+  type ClientMessage,
+  type ServerMessage,
+  serverMessageSchema,
 } from "./validations/transport/messages";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
@@ -31,7 +32,17 @@ function useProvideWebSocket(url: string) {
   const { sendJsonMessage, readyState } = useWebSocket(url, {
     onMessage: (event) => {
       try {
-        const msg = JSON.parse(event.data) as ServerMessage;
+        const parsed = JSON.parse(event.data);
+
+        const result = serverMessageSchema.safeParse(parsed);
+
+        if (!result.success) {
+          console.error("Bad WS message", parsed);
+
+          return;
+        }
+
+        const msg = result.data;
         emit(msg.type, msg.payload);
       } catch {
         console.error("Bad WS message", event.data);
