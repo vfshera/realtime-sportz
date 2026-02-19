@@ -1,5 +1,3 @@
-import { commentary, matches } from "~/.server/db/schema";
-import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 /**
@@ -12,7 +10,15 @@ const isoStringToDate = z.iso
     message: "Invalid ISO date",
   });
 
-export const matchPayloadSchema = createSelectSchema(matches).extend({
+const nullableText = z.string().nullable().optional();
+
+export const matchPayloadSchema = z.object({
+  id: z.string().min(1),
+  sport: z.string(),
+  homeTeam: z.string(),
+  awayTeam: z.string(),
+  homeScore: z.number().int().positive(),
+  awayScore: z.number().int().positive(),
   status: z.literal(["scheduled", "live", "finished"]),
   startTime: isoStringToDate,
   endTime: isoStringToDate,
@@ -20,7 +26,18 @@ export const matchPayloadSchema = createSelectSchema(matches).extend({
   updatedAt: isoStringToDate,
 });
 
-export const commentaryPayloadSchema = createSelectSchema(commentary).extend({
+export const commentaryPayloadSchema = z.object({
+  id: z.string().min(1),
+  matchId: z.string().min(1),
+  minute: z.number().int().positive(),
+  sequence: z.number().int().positive(),
+  period: nullableText,
+  eventType: z.string(),
+  actor: nullableText,
+  team: nullableText,
+  message: z.string(),
+  metadata: z.record(z.string(), z.unknown()),
+  tags: nullableText,
   createdAt: isoStringToDate,
   updatedAt: isoStringToDate,
 });
