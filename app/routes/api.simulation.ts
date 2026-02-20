@@ -46,7 +46,7 @@ export async function action({ request }: Route.ActionArgs) {
         ok: false,
         error: {
           code: "SIMULATION_ERROR",
-          message: String(err),
+          message: err instanceof Error ? err.message : "Unknown error",
         },
       },
       { status: 500 },
