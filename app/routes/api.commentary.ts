@@ -1,13 +1,18 @@
 import type { Route } from "./+types/api.commentary";
 import { data } from "react-router";
-import commentary from "~/.server/db/schema/commentary";
-import { requireJson } from "~/utils/api";
+import commentary, { type Commentary } from "~/.server/db/schema/commentary";
+import {
+  type ApiSuccess,
+  methodNotAllowed,
+  requireJson,
+  validationError,
+} from "~/utils/api.server";
 import { createCommentarySchema } from "~/validations/commentary";
 import { appContext } from "$/server/context";
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {
-    return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+    return methodNotAllowed();
   }
 
   const raw = await requireJson(request);
@@ -15,12 +20,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   const res = createCommentarySchema.safeParse(raw);
 
   if (!res.success) {
-    return data(
-      {
-        ok: false,
-        errors: res.error.issues,
-      },
-      { status: 422 },
+    return validationError(
+      res.error.issues.map((i) => ({
+        path: i.path,
+        message: i.message,
+      })),
     );
   }
 
@@ -31,7 +35,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     .values(res.data)
     .returning();
 
-  return data({ ok: true, data: newCommentary }, { status: 201 });
+  return data<ApiSuccess<Commentary>>(
+    { ok: true, data: newCommentary },
+    { status: 201 },
+  );
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -39,5 +46,5 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const allCommentary = await db.query.commentary.findMany();
 
-  return data({ data: allCommentary });
+  return data<ApiSuccess<Commentary[]>>({ ok: true, data: allCommentary });
 }

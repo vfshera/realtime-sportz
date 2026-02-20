@@ -1,7 +1,16 @@
 import type { Route } from "./+types/api.commentary.$commentaryId";
 import { data } from "react-router";
-import commentary, { type NewCommentary } from "~/.server/db/schema/commentary";
-import { requireJson } from "~/utils/api";
+import commentary, {
+  type Commentary,
+  type NewCommentary,
+} from "~/.server/db/schema/commentary";
+import {
+  type ApiSuccess,
+  methodNotAllowed,
+  notFound,
+  requireJson,
+  validationError,
+} from "~/utils/api.server";
 import {
   fullUpdateCommentarySchema,
   updateCommentarySchema,
@@ -17,13 +26,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   });
 
   if (!existing) {
-    return data({ ok: false, error: "Commentary not found" }, { status: 404 });
+    return notFound("Commentary not found");
   }
 
   if (request.method === "DELETE") {
     await db.delete(commentary).where(eq(commentary.id, params.commentaryId));
 
-    return data({ ok: true, data: null });
+    return data<ApiSuccess<null>>({ ok: true, data: null });
   }
 
   if (request.method === "PUT") {
@@ -32,16 +41,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const res = fullUpdateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
-      return data(
-        {
-          ok: false,
-          error: "Validation failed",
-          errors: res.error.issues.map((i) => ({
-            path: i.path,
-            message: i.message,
-          })),
-        },
-        { status: 422 },
+      return validationError(
+        res.error.issues.map((i) => ({
+          path: i.path,
+          message: i.message,
+        })),
       );
     }
 
@@ -51,7 +55,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       .where(eq(commentary.id, params.commentaryId))
       .returning();
 
-    return data({ ok: true, data: updated });
+    return data<ApiSuccess<Commentary>>({ ok: true, data: updated });
   }
 
   if (request.method === "PATCH") {
@@ -60,16 +64,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const res = updateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
-      return data(
-        {
-          ok: false,
-          error: "Validation failed",
-          errors: res.error.issues.map((i) => ({
-            path: i.path,
-            message: i.message,
-          })),
-        },
-        { status: 422 },
+      return validationError(
+        res.error.issues.map((i) => ({
+          path: i.path,
+          message: i.message,
+        })),
       );
     }
 
@@ -79,10 +78,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       .where(eq(commentary.id, params.commentaryId))
       .returning();
 
-    return data({ ok: true, data: updated });
+    return data<ApiSuccess<Commentary>>({ ok: true, data: updated });
   }
 
-  return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+  return methodNotAllowed();
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
@@ -93,8 +92,8 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   });
 
   if (!item) {
-    return data({ ok: false, error: "Commentary not found" }, { status: 404 });
+    return notFound("Commentary not found");
   }
 
-  return data({ ok: true, data: item });
+  return data<ApiSuccess<Commentary>>({ ok: true, data: item });
 }

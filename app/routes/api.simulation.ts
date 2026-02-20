@@ -1,10 +1,11 @@
 import type { Route } from "./+types/api.simulation";
-import { useFetcher } from "react-router";
+import { data, useFetcher } from "react-router";
 import {
   restartSimulation,
   startSimulation,
   stopSimulation,
 } from "~/.server/simulator";
+import { type ApiError, type ApiSuccess } from "~/utils/api.server";
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
@@ -28,13 +29,31 @@ export async function action({ request }: Route.ActionArgs) {
         break;
       }
       default:
-        return { ok: false, error: "Invalid intent" };
+        return data<ApiError>(
+          {
+            ok: false,
+            error: {
+              code: "INVALID_INTENT",
+              message: "Invalid intent",
+            },
+          },
+          { status: 400 },
+        );
     }
   } catch (err) {
-    return { ok: false, error: String(err) };
+    return data<ApiError>(
+      {
+        ok: false,
+        error: {
+          code: "SIMULATION_ERROR",
+          message: String(err),
+        },
+      },
+      { status: 500 },
+    );
   }
 
-  return { ok: true };
+  return data<ApiSuccess<null>>({ ok: true, data: null });
 }
 
 export function useSimulationFetcher() {

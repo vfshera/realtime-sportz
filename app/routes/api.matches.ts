@@ -1,13 +1,21 @@
 import type { Route } from "./+types/api.matches";
 import { data } from "react-router";
-import matches, { type NewMatch } from "~/.server/db/schema/matches";
-import { requireJson } from "~/utils/api";
+import matches, {
+  type Match,
+  type NewMatch,
+} from "~/.server/db/schema/matches";
+import {
+  type ApiSuccess,
+  methodNotAllowed,
+  requireJson,
+  validationError,
+} from "~/utils/api.server";
 import { createMatchSchema } from "~/validations/matches";
 import { appContext } from "$/server/context";
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {
-    return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+    return methodNotAllowed();
   }
 
   const raw = await requireJson<Record<string, unknown>>(request);
@@ -19,14 +27,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   });
 
   if (!res.success) {
-    return data(
-      {
-        ok: false,
-        errors: res.error.issues,
-      },
-      {
-        status: 422,
-      },
+    return validationError(
+      res.error.issues.map((i) => ({
+        path: i.path,
+        message: i.message,
+      })),
     );
   }
 
@@ -37,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     .values(res.data as NewMatch)
     .returning();
 
-  return data({ ok: true, data: newMatch }, { status: 201 });
+  return data<ApiSuccess<Match>>({ ok: true, data: newMatch }, { status: 201 });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -45,5 +50,5 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const allMatches = await db.query.matches.findMany();
 
-  return data({ data: allMatches });
+  return data<ApiSuccess<Match[]>>({ ok: true, data: allMatches });
 }

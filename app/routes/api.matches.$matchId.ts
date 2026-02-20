@@ -1,7 +1,17 @@
 import type { Route } from "./+types/api.matches.$matchId";
 import { data } from "react-router";
-import matches, { type NewMatch } from "~/.server/db/schema/matches";
-import { requireJson } from "~/utils/api";
+import matches, {
+  type Match,
+  type NewMatch,
+} from "~/.server/db/schema/matches";
+import {
+  type ApiError,
+  type ApiSuccess,
+  methodNotAllowed,
+  notFound,
+  requireJson,
+  validationError,
+} from "~/utils/api.server";
 import {
   fullUpdateMatchSchema,
   updateMatchSchema,
@@ -17,13 +27,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   });
 
   if (!existingMatch) {
-    return data({ ok: false, error: "Match not found" }, { status: 404 });
+    return notFound("Match not found");
   }
 
   if (request.method === "DELETE") {
     await db.delete(matches).where(eq(matches.id, params.matchId));
 
-    return data({ ok: true, data: null });
+    return data<ApiSuccess<null>>({ ok: true, data: null });
   }
 
   if (request.method === "PUT") {
@@ -36,16 +46,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     });
 
     if (!res.success) {
-      return data(
-        {
-          ok: false,
-          error: "Validation failed",
-          errors: res.error.issues.map((i) => ({
-            path: i.path,
-            message: i.message,
-          })),
-        },
-        { status: 422 },
+      return validationError(
+        res.error.issues.map((i) => ({
+          path: i.path,
+          message: i.message,
+        })),
       );
     }
 
@@ -55,7 +60,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       .where(eq(matches.id, params.matchId))
       .returning();
 
-    return data({ ok: true, data: updated });
+    return data<ApiSuccess<Match>>({ ok: true, data: updated });
   }
 
   if (request.method === "PATCH") {
@@ -68,14 +73,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     });
 
     if (!res.success) {
-      return data(
+      return data<ApiError>(
         {
           ok: false,
-          error: "Validation failed",
-          errors: res.error.issues.map((i) => ({
-            path: i.path,
-            message: i.message,
-          })),
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Validation failed",
+            details: res.error.issues.map((i) => ({
+              path: i.path,
+              message: i.message,
+            })),
+          },
         },
         { status: 422 },
       );
@@ -87,10 +95,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       .where(eq(matches.id, params.matchId))
       .returning();
 
-    return data({ ok: true, data: updated });
+    return data<ApiSuccess<Match>>({ ok: true, data: updated });
   }
 
-  return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+  return methodNotAllowed();
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
@@ -101,8 +109,8 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   });
 
   if (!match) {
-    return data({ ok: false, error: "Match not found" }, { status: 404 });
+    return notFound("Match not found");
   }
 
-  return data({ ok: true, data: match });
+  return data<ApiSuccess<Match>>({ ok: true, data: match });
 }
