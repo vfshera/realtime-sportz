@@ -57,7 +57,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export function useSimulationFetcher() {
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<ReturnType<typeof action>>();
 
   return {
     ...fetcher,
