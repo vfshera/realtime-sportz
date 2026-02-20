@@ -2,32 +2,54 @@ import matches from "~/.server/db/schema/matches";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-/**
- * Schema for creating a match
- */
-export const createMatchSchema = createInsertSchema(matches).superRefine(
-  (data, ctx) => {
-    const start = new Date(data.startTime);
+const baseInsertMatchSchema = createInsertSchema(matches);
 
-    const end = new Date(data.endTime);
+const validateTimes = (
+  data: { startTime?: unknown; endTime?: unknown },
+  ctx: z.RefinementCtx,
+) => {
+  const start =
+    data.startTime instanceof Date
+      ? data.startTime
+      : new Date(data.startTime as string);
 
-    if (
-      !Number.isNaN(start.getTime()) &&
-      !Number.isNaN(end.getTime()) &&
-      end <= start
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["endTime"],
-        message: "endTime must be after startTime",
-      });
-    }
-  },
-);
+  const end =
+    data.endTime instanceof Date
+      ? data.endTime
+      : new Date(data.endTime as string);
 
-/**
- * Schema for updating match scores
- */
+  if (
+    data.startTime !== undefined &&
+    data.endTime !== undefined &&
+    !Number.isNaN(start.getTime()) &&
+    !Number.isNaN(end.getTime()) &&
+    end <= start
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["endTime"],
+      message: "endTime must be after startTime",
+    });
+  }
+};
+
+export const createMatchSchema =
+  baseInsertMatchSchema.superRefine(validateTimes);
+
+export const updateMatchSchema = baseInsertMatchSchema
+  .partial()
+  .superRefine(validateTimes);
+
+export const fullUpdateMatchSchema = baseInsertMatchSchema
+  .required({
+    sport: true,
+    homeTeam: true,
+    awayTeam: true,
+    startTime: true,
+    endTime: true,
+  })
+  .superRefine(validateTimes);
+
 export const updateScoreSchema = z.object({
   homeScore: z.coerce.number().int().min(0),
   awayScore: z.coerce.number().int().min(0),
