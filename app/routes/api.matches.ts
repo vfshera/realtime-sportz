@@ -12,6 +12,7 @@ import {
 } from "~/utils/api.server";
 import { createMatchSchema } from "~/validations/matches";
 import { appContext } from "$/server/context";
+import z from "zod";
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {
@@ -27,12 +28,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   });
 
   if (!res.success) {
-    return validationError(
-      res.error.issues.map((i) => ({
-        path: i.path,
-        message: i.message,
-      })),
-    );
+    return validationError(z.flattenError(res.error));
   }
 
   const { db } = context.get(appContext);

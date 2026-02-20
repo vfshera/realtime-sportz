@@ -18,6 +18,7 @@ import {
 } from "~/validations/matches";
 import { appContext } from "$/server/context";
 import { eq } from "drizzle-orm";
+import z from "zod";
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   const { db } = context.get(appContext);
@@ -46,12 +47,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     });
 
     if (!res.success) {
-      return validationError(
-        res.error.issues.map((i) => ({
-          path: i.path,
-          message: i.message,
-        })),
-      );
+      return validationError(z.flattenError(res.error));
     }
 
     const [updated] = await db
