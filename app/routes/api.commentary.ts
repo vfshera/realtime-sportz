@@ -5,15 +5,11 @@ import { requireJson } from "~/utils/api";
 import { createCommentarySchema } from "~/validations/commentary";
 import { appContext } from "$/server/context";
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const { db } = context.get(appContext);
-
-  const allCommentary = await db.query.commentary.findMany();
-
-  return data({ data: allCommentary });
-}
-
 export async function action({ request, context }: Route.ActionArgs) {
+  if (request.method !== "POST") {
+    return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+  }
+
   const raw = await requireJson(request);
 
   const res = createCommentarySchema.safeParse(raw);
@@ -36,4 +32,12 @@ export async function action({ request, context }: Route.ActionArgs) {
     .returning();
 
   return data({ ok: true, data: newCommentary }, { status: 201 });
+}
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const { db } = context.get(appContext);
+
+  const allCommentary = await db.query.commentary.findMany();
+
+  return data({ data: allCommentary });
 }

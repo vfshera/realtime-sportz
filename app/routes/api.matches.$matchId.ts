@@ -26,15 +26,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ ok: true, data: null });
   }
 
-  requireJson(request);
-
-  const raw = await request.json();
-
   if (request.method === "PUT") {
+    const raw = await requireJson<Record<string, unknown>>(request);
+
     const res = fullUpdateMatchSchema.safeParse({
       ...raw,
-      startTime: raw.startTime ? new Date(raw.startTime) : undefined,
-      endTime: raw.endTime ? new Date(raw.endTime) : undefined,
+      startTime: raw.startTime ? new Date(raw.startTime as string) : undefined,
+      endTime: raw.endTime ? new Date(raw.endTime as string) : undefined,
     });
 
     if (!res.success) {
@@ -61,10 +59,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (request.method === "PATCH") {
+    const raw = await requireJson<Record<string, unknown>>(request);
+
     const res = updateMatchSchema.safeParse({
       ...raw,
-      startTime: raw.startTime ? new Date(raw.startTime) : undefined,
-      endTime: raw.endTime ? new Date(raw.endTime) : undefined,
+      startTime: raw.startTime ? new Date(raw.startTime as string) : undefined,
+      endTime: raw.endTime ? new Date(raw.endTime as string) : undefined,
     });
 
     if (!res.success) {

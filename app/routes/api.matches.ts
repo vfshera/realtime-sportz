@@ -6,14 +6,16 @@ import { createMatchSchema } from "~/validations/matches";
 import { appContext } from "$/server/context";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  requireJson(request);
+  if (request.method !== "POST") {
+    return data({ ok: false, error: "Method not allowed" }, { status: 405 });
+  }
 
-  const raw = await request.json();
+  const raw = await requireJson<Record<string, unknown>>(request);
 
   const res = createMatchSchema.safeParse({
     ...raw,
-    startTime: new Date(raw.startTime),
-    endTime: new Date(raw.endTime),
+    startTime: new Date(raw.startTime as string),
+    endTime: new Date(raw.endTime as string),
   });
 
   if (!res.success) {

@@ -26,9 +26,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ ok: true, data: null });
   }
 
-  const raw = await requireJson(request);
-
   if (request.method === "PUT") {
+    const raw = await requireJson<Record<string, unknown>>(request);
+
     const res = fullUpdateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
@@ -55,6 +55,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (request.method === "PATCH") {
+    const raw = await requireJson<Record<string, unknown>>(request);
+
     const res = updateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
