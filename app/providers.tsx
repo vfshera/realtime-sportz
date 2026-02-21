@@ -147,19 +147,22 @@ function useProvideWebSocket(url: string) {
     [send, unsubscribe],
   );
 
-  useEffect(() => {
-    if (isConnected) {
-      subsRef.current.forEach((matchId) => {
-        const sent = send({ type: "subscribe", payload: { matchId } });
+  useEffect(
+    function resubscribeToActiveMatches() {
+      if (isConnected) {
+        subsRef.current.forEach((matchId) => {
+          const sent = send({ type: "subscribe", payload: { matchId } });
 
-        if (!sent) {
-          console.warn(
-            `Failed to resubscribe to match ${matchId} on reconnect`,
-          );
-        }
-      });
-    }
-  }, [isConnected, send]);
+          if (!sent) {
+            console.warn(
+              `Failed to resubscribe to match ${matchId} on reconnect`,
+            );
+          }
+        });
+      }
+    },
+    [isConnected, send],
+  );
 
   return useMemo(
     () => ({ on, send, subscribe, unsubscribe, readyState, isConnected }),

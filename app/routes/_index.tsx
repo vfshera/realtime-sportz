@@ -59,28 +59,34 @@ function HomePage({
 
   const { subscribe, isConnected, on } = useWebSocketContext();
 
-  useEffect(() => {
-    const offWelcome = on("welcome", ({ message }) => {
-      console.log(`Received welcome message from server: '${message}'`);
-    });
+  useEffect(
+    function setupEventListeners() {
+      const offWelcome = on("welcome", ({ message }) => {
+        console.log(`Received welcome message from server: '${message}'`);
+      });
 
-    const offMatchCreated = on("match.created", (payload) => {
-      console.log("New match created: ", payload);
+      const offMatchCreated = on("match.created", (payload) => {
+        console.log("New match created: ", payload);
 
-      setMatches((prev) => [payload, ...prev]);
-    });
+        setMatches((prev) => [payload, ...prev]);
+      });
 
-    return () => {
-      offWelcome();
-      offMatchCreated();
-    };
-  }, [on]);
+      return () => {
+        offWelcome();
+        offMatchCreated();
+      };
+    },
+    [on],
+  );
 
-  useEffect(() => {
-    if (!selectedMatch) return;
+  useEffect(
+    function subscribeToSelectedMatch() {
+      if (!selectedMatch) return;
 
-    return subscribe(selectedMatch.id);
-  }, [selectedMatch, subscribe]);
+      return subscribe(selectedMatch.id);
+    },
+    [selectedMatch, subscribe],
+  );
 
   return (
     <main className="mx-auto w-full max-w-300 pt-8">
