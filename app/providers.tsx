@@ -82,16 +82,16 @@ function useProvideWebSocket(url: string) {
     [],
   );
 
-  function emit<T extends ServerMessage["type"]>(
-    type: T,
-    payload: PayloadOf<T>,
-  ) {
-    const set = listenersRef.current[type] as
-      | Set<(payload: PayloadOf<T>) => void>
-      | undefined;
+  const emit = useCallback(
+    <T extends ServerMessage["type"]>(type: T, payload: PayloadOf<T>) => {
+      const set = listenersRef.current[type] as
+        | Set<(payload: PayloadOf<T>) => void>
+        | undefined;
 
-    set?.forEach((cb) => cb(payload));
-  }
+      set?.forEach((cb) => cb(payload));
+    },
+    [],
+  );
 
   const send = useCallback(
     (message: ClientMessage): boolean => {
@@ -101,24 +101,6 @@ function useProvideWebSocket(url: string) {
       return true;
     },
     [isConnected, sendJsonMessage],
-  );
-
-  const subscribe = useCallback(
-    (matchId: Match["id"]) => {
-      const subs = subsRef.current;
-
-      if (subs.has(matchId)) return;
-
-      subs.add(matchId);
-      const sent = send({ type: "subscribe", payload: { matchId } });
-
-      if (!sent) {
-        console.warn(
-          `Failed to subscribe to match ${matchId}: WebSocket not connected`,
-        );
-      }
-    },
-    [send],
   );
 
   const unsubscribe = useCallback(
@@ -139,16 +121,44 @@ function useProvideWebSocket(url: string) {
     [send],
   );
 
-  useEffect(() => {
-    if (!isConnected) return;
+  const subscribe = useCallback(
+    (matchId: Match["id"]) => {
+      const subs = subsRef.current;
 
-    subsRef.current.forEach((matchId) => {
+      const cleanUp = () => {
+        unsubscribe(matchId);
+      };
+
+      if (subs.has(matchId)) {
+        return cleanUp;
+      }
+
+      subs.add(matchId);
       const sent = send({ type: "subscribe", payload: { matchId } });
 
       if (!sent) {
-        console.warn(`Failed to resubscribe to match ${matchId} on reconnect`);
+        console.warn(
+          `Failed to subscribe to match ${matchId}: WebSocket not connected`,
+        );
       }
-    });
+
+      return cleanUp;
+    },
+    [send, unsubscribe],
+  );
+
+  useEffect(() => {
+    if (isConnected) {
+      subsRef.current.forEach((matchId) => {
+        const sent = send({ type: "subscribe", payload: { matchId } });
+
+        if (!sent) {
+          console.warn(
+            `Failed to resubscribe to match ${matchId} on reconnect`,
+          );
+        }
+      });
+    }
   }, [isConnected, send]);
 
   return useMemo(

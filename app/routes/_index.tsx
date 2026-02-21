@@ -57,7 +57,7 @@ function HomePage({
 
   const fetcher = useSimulationFetcher();
 
-  const { subscribe, unsubscribe, isConnected, on } = useWebSocketContext();
+  const { subscribe, isConnected, on } = useWebSocketContext();
 
   useEffect(() => {
     const offWelcome = on("welcome", ({ message }) => {
@@ -75,6 +75,12 @@ function HomePage({
       offMatchCreated();
     };
   }, [on]);
+
+  useEffect(() => {
+    if (!selectedMatch) return;
+
+    return subscribe(selectedMatch.id);
+  }, [selectedMatch, subscribe]);
 
   return (
     <main className="mx-auto w-full max-w-300 pt-8">
@@ -170,7 +176,6 @@ function HomePage({
                             variant="primary"
                             onClick={() => {
                               setSelectedMatch(match);
-                              subscribe(match.id);
                             }}
                           >
                             View Recap
@@ -179,7 +184,6 @@ function HomePage({
                             <Button
                               variant="secondary"
                               onClick={() => {
-                                unsubscribe(match.id);
                                 setSelectedMatch(null);
                               }}
                             >
