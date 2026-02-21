@@ -5,7 +5,7 @@ import {
   startSimulation,
   stopSimulation,
 } from "~/.server/simulator";
-import { type ApiError, type ApiSuccess } from "~/utils/api.server";
+import type { ApiError, ApiSuccess } from "~/utils/api.server";
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
