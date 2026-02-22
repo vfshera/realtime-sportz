@@ -8,7 +8,20 @@ type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
 
-  const intent = form.get("intent") as SimulationActionIntent;
+  const intent = form.get("intent") as SimulationActionIntent | null;
+
+  if (!intent) {
+    return data<ApiError>(
+      {
+        ok: false,
+        error: {
+          code: "MISSING_INTENT",
+          message: "Missing intent",
+        },
+      },
+      { status: 400 },
+    );
+  }
 
   try {
     switch (intent) {
