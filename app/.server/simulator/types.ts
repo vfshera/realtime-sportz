@@ -20,7 +20,7 @@ export type SportPlayerPool = {
 
 export type MatchInfo = {
   id: string;
-  sport: string;
+  sport: Sport;
   homeTeam: string;
   awayTeam: string;
   startTime: Date;

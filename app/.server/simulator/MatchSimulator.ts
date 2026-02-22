@@ -32,7 +32,7 @@ export class MatchSimulator {
     this.#matchId = match.id;
     this.#match = {
       id: match.id,
-      sport: match.sport,
+      sport: match.sport as MatchInfo["sport"],
       homeTeam: match.homeTeam,
       awayTeam: match.awayTeam,
       startTime: match.startTime,
@@ -215,11 +215,8 @@ export class MatchSimulator {
         type: "match.finished",
         payload: {
           id: this.#matchId,
-          homeTeam: this.#match.homeTeam,
-          awayTeam: this.#match.awayTeam,
           homeScore: this.#currentScore.home,
           awayScore: this.#currentScore.away,
-          sport: this.#match.sport,
         },
       });
     }

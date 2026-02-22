@@ -5,14 +5,14 @@ import {
   CRICKET_TEAMS,
   FOOTBALL_TEAMS,
 } from "./data/players";
-import type { SportPlayerPool, TeamSquad } from "./types";
+import type { Sport, SportPlayerPool, TeamSquad } from "./types";
 
 export class PlayerPoolManager {
   readonly #pools: Map<string, SportPlayerPool> = new Map();
 
   getPool(
     matchId: string,
-    sport: string,
+    sport: Sport,
     homeTeam: string,
     awayTeam: string,
   ): SportPlayerPool {
@@ -39,7 +39,7 @@ export class PlayerPoolManager {
   }
 
   private loadOrCreatePool(
-    sport: string,
+    sport: Sport,
     homeTeam: string,
     awayTeam: string,
   ): SportPlayerPool {
@@ -65,7 +65,7 @@ export class PlayerPoolManager {
     }
   }
 
-  private generateRandomSquad(sport: string): TeamSquad {
+  private generateRandomSquad(sport: Sport): TeamSquad {
     const config = SPORT_CONFIG[sport];
 
     if (!config) {

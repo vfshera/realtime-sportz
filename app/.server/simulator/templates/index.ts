@@ -2,6 +2,7 @@ import type {
   CommentaryEvent,
   MatchInfo,
   ScoreEvent,
+  Sport,
   SportPlayerPool,
 } from "../types";
 import { BasketballTemplate } from "./basketball";
@@ -47,7 +48,7 @@ export function createTemplate(
   return new TemplateClass(match, players, scoreEvents);
 }
 
-export function getTemplateDuration(sport: string): number {
+export function getTemplateDuration(sport: Sport): number {
   const TemplateClass = TEMPLATE_MAP[sport];
 
   if (!TemplateClass) {
