@@ -62,7 +62,7 @@ function HomePage({
   useEffect(
     function setupEventListeners() {
       const offWelcome = on("welcome", ({ message }) => {
-        console.log(`Received welcome message from server: '${message}'`);
+        console.log(`Received welcome message from server:\n'${message}'`);
       });
 
       const offMatchCreated = on("match.created", (payload) => {
@@ -71,9 +71,39 @@ function HomePage({
         setMatches((prev) => [payload, ...prev]);
       });
 
+      const offMatchUpdated = on(
+        "match.updated",
+        ({ id: updatedId, ...updatedMatch }) => {
+          console.log("Match updated: ", updatedMatch);
+
+          setMatches((prev) => {
+            return prev.map((m) =>
+              m.id === updatedId ? { ...m, ...updatedMatch } : m,
+            );
+          });
+        },
+      );
+
+      const offMatchFinished = on(
+        "match.finished",
+        ({ id: finishedId, ...finishedMatch }) => {
+          console.log(`Match with id ${finishedId} has finished.`);
+
+          setMatches((prev) => {
+            return prev.map((m) =>
+              m.id === finishedId
+                ? { ...m, ...finishedMatch, status: "finished" }
+                : m,
+            );
+          });
+        },
+      );
+
       return () => {
         offWelcome();
         offMatchCreated();
+        offMatchUpdated();
+        offMatchFinished();
       };
     },
     [on],
