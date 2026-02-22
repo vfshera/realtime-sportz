@@ -17,20 +17,33 @@ export const matchPayloadSchema = z.object({
   sport: z.string(),
   homeTeam: z.string(),
   awayTeam: z.string(),
-  homeScore: z.number().int().positive(),
-  awayScore: z.number().int().positive(),
-  status: z.literal(["scheduled", "live", "finished"]),
+  homeScore: z.number().int().nonnegative(),
+  awayScore: z.number().int().nonnegative(),
+  status: z.enum(["scheduled", "live", "finished"]),
   startTime: isoStringToDate,
   endTime: isoStringToDate,
   createdAt: isoStringToDate,
   updatedAt: isoStringToDate,
 });
 
+export const matchUpdatedPayloadSchema = matchPayloadSchema.pick({
+  id: true,
+  status: true,
+  homeScore: true,
+  awayScore: true,
+});
+
+export const matchFinishedPayloadSchema = matchPayloadSchema.pick({
+  id: true,
+  homeScore: true,
+  awayScore: true,
+});
+
 export const commentaryPayloadSchema = z.object({
   id: z.string().min(1),
   matchId: z.string().min(1),
-  minute: z.number().int().positive(),
-  sequence: z.number().int().positive(),
+  minute: z.number().int().nonnegative(),
+  sequence: z.number().int().nonnegative(),
   period: nullableText,
   eventType: z.string(),
   actor: nullableText,
@@ -64,6 +77,14 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("match.created"),
     payload: matchPayloadSchema,
+  }),
+  z.object({
+    type: z.literal("match.updated"),
+    payload: matchUpdatedPayloadSchema,
+  }),
+  z.object({
+    type: z.literal("match.finished"),
+    payload: matchFinishedPayloadSchema,
   }),
   z.object({
     type: z.literal("commentary.created"),
