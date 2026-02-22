@@ -1,5 +1,6 @@
 import { RouterContextProvider } from "react-router";
 import { db } from "~/.server/db";
+import { simulation } from "~/.server/simulator";
 import { clientEnv, env } from "~/env.server";
 import { appContext } from "./context";
 import {
@@ -12,13 +13,15 @@ import {
 } from "./security";
 import type { AppBindings } from "./types";
 import { createWSHandler } from "./websocket/handler";
+import { pubsub } from "./websocket/pubsub";
+import closeWithGrace from "close-with-grace";
 import type { Context } from "hono";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import type { WSEvents } from "hono/ws";
 import { createHonoServer } from "react-router-hono-server/node";
 
-export default await createHonoServer<AppBindings>({
+const server = await createHonoServer<AppBindings>({
   useWebSocket: true,
   beforeAll(server) {
     server.use(requestId());
@@ -56,3 +59,18 @@ export default await createHonoServer<AppBindings>({
     return context;
   },
 });
+
+closeWithGrace({ delay: 5000 }, async ({ signal, err }) => {
+  console.log(`[${signal}] received`);
+
+  if (err) {
+    console.error("Server closing with error:", err);
+  } else {
+    console.log(`Server shutting down...`);
+  }
+
+  simulation.stop();
+  pubsub.destroy();
+});
+
+export default server;
