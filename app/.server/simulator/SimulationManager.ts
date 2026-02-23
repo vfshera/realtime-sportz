@@ -2,11 +2,18 @@ import { getMatches } from "~/data/loader.server";
 import { getMatchStatus } from "~/utils/match";
 import { db } from "../db";
 import { commentary, matches } from "../db/schema";
+import { matchService } from "../services";
 import { MatchSimulator } from "./MatchSimulator";
 import { playerPoolManager } from "./PlayerPoolManager";
 import { DEFAULT_SPEED_MULTIPLIER, MATCH_CREATION_DELAY_MS } from "./constants";
+import {
+  type SimulationError,
+  alreadyRunning,
+  dbClearFailed,
+  matchesExist,
+} from "./errors";
 import type { ScorePrediction, SimulationStats } from "./types";
-import { pubsub } from "$/server/websocket/pubsub";
+import { ResultAsync, errAsync } from "neverthrow";
 import { setTimeout as sleep } from "node:timers/promises";
 
 export class SimulationManager {
@@ -24,15 +31,25 @@ export class SimulationManager {
     return this.#speedMultiplier;
   }
 
-  async start(): Promise<void> {
-    if (this.#running) return;
+  start(): ResultAsync<void, SimulationError> {
+    if (this.#running) {
+      return errAsync(alreadyRunning());
+    }
 
-    this.#running = true;
-    playerPoolManager.clearAll();
-    this.#predictions.clear();
-    this.#matchSimulators.clear();
+    return ResultAsync.fromPromise(db.query.matches.findMany(), (e) =>
+      dbClearFailed(e),
+    ).andThen((existingMatches) => {
+      if (existingMatches.length > 0) {
+        return errAsync(matchesExist(existingMatches.length));
+      }
 
-    await this.simulateMatchCreation();
+      this.#running = true;
+      playerPoolManager.clearAll();
+      this.#predictions.clear();
+      this.#matchSimulators.clear();
+
+      return this.simulateMatchCreation();
+    });
   }
 
   stop(): void {
@@ -46,11 +63,23 @@ export class SimulationManager {
     this.#matchSimulators.clear();
   }
 
-  async restart(): Promise<void> {
+  restart(): ResultAsync<void, SimulationError> {
     this.stop();
-    await db.delete(matches);
-    await db.delete(commentary);
-    await this.start();
+
+    return ResultAsync.fromPromise(
+      Promise.all([db.delete(matches), db.delete(commentary)]),
+      (e) => dbClearFailed(e),
+    )
+      .andThen(() => this.start())
+      .orElse((error) => {
+        // If clear failed but we already stopped, log and return error
+        console.error(
+          "SimulationManager: Failed to clear database during restart",
+          error,
+        );
+
+        return errAsync(error);
+      });
   }
 
   setSpeed(speed: number): void {
@@ -71,53 +100,58 @@ export class SimulationManager {
     return this.#predictions.get(matchId);
   }
 
-  private async simulateMatchCreation(): Promise<void> {
+  private simulateMatchCreation(): ResultAsync<void, SimulationError> {
     const rawMatches = getMatches();
 
-    for (const raw of rawMatches) {
+    return ResultAsync.fromSafePromise(
+      this.createMatchesSequentially(rawMatches),
+    ).map(() => undefined);
+  }
+
+  private async createMatchesSequentially(
+    rawMatches: ReturnType<typeof getMatches>,
+  ): Promise<void> {
+    for (let i = 0; i < rawMatches.length; i++) {
       if (!this.#running) break;
 
-      try {
-        const status =
-          getMatchStatus(raw.startTime, raw.endTime) || "scheduled";
+      const raw = rawMatches[i];
 
-        const [match] = await db
-          .insert(matches)
-          .values({
-            sport: raw.sport,
-            homeTeam: raw.homeTeam,
-            awayTeam: raw.awayTeam,
-            status,
-            startTime: raw.startTime,
-            endTime: raw.endTime,
-          })
-          .returning();
+      const status = getMatchStatus(raw.startTime, raw.endTime) || "scheduled";
 
-        const simulator = new MatchSimulator(match, {
-          onTimerCreated: (timer) => this.#timers.add(timer),
-          onTimerCleared: (timer) => this.#timers.delete(timer),
-          getSpeedMultiplier: () => this.#speedMultiplier,
-        });
+      const result = await matchService.create({
+        sport: raw.sport,
+        homeTeam: raw.homeTeam,
+        awayTeam: raw.awayTeam,
+        status,
+        startTime: raw.startTime,
+        endTime: raw.endTime,
+      });
 
-        await simulator.initialize();
+      result.match(
+        (match) => {
+          const simulator = new MatchSimulator(match, {
+            onTimerCreated: (timer) => this.#timers.add(timer),
+            onTimerCleared: (timer) => this.#timers.delete(timer),
+            getSpeedMultiplier: () => this.#speedMultiplier,
+          });
 
-        this.#predictions.set(match.id, simulator.prediction);
-        this.#matchSimulators.set(match.id, simulator);
+          simulator.initialize();
 
-        pubsub.broadcast(match.id, {
-          type: "match.created",
-          payload: match,
-        });
+          this.#predictions.set(match.id, simulator.prediction);
+          this.#matchSimulators.set(match.id, simulator);
 
-        simulator.start();
+          simulator.start();
+        },
+        (error) => {
+          console.error("SimulationManager: Failed to create match", {
+            index: i,
+            raw,
+            error,
+          });
+        },
+      );
 
-        await sleep(MATCH_CREATION_DELAY_MS / this.#speedMultiplier);
-      } catch (err) {
-        console.error("SimulationManager: Failed to create match", {
-          raw,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
+      await sleep(MATCH_CREATION_DELAY_MS / this.#speedMultiplier);
     }
   }
 
