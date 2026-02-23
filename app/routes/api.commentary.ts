@@ -1,17 +1,16 @@
 import type { Route } from "./+types/api.commentary";
-import { data } from "react-router";
-import commentary, { type Commentary } from "~/.server/db/schema/commentary";
+import type { NewCommentary } from "~/.server/db/schema/commentary";
+import { commentaryService } from "~/.server/services";
 import {
-  type ApiSuccess,
   methodNotAllowed,
   requireJson,
+  resultToResponse,
   validationError,
 } from "~/utils/api.server";
 import { createCommentarySchema } from "~/validations/commentary";
-import { appContext } from "$/server/context";
 import z from "zod";
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   if (request.method !== "POST") {
     return methodNotAllowed();
   }
@@ -24,23 +23,13 @@ export async function action({ request, context }: Route.ActionArgs) {
     return validationError(z.flattenError(res.error));
   }
 
-  const { db } = context.get(appContext);
+  const result = await commentaryService.create(res.data as NewCommentary);
 
-  const [newCommentary] = await db
-    .insert(commentary)
-    .values(res.data)
-    .returning();
-
-  return data<ApiSuccess<Commentary>>(
-    { ok: true, data: newCommentary },
-    { status: 201 },
-  );
+  return resultToResponse(result, { success: 201 });
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const { db } = context.get(appContext);
+export async function loader() {
+  const result = await commentaryService.findAll();
 
-  const allCommentary = await db.query.commentary.findMany();
-
-  return data<ApiSuccess<Commentary[]>>({ ok: true, data: allCommentary });
+  return resultToResponse(result);
 }
