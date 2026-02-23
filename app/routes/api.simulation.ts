@@ -23,57 +23,75 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  try {
-    switch (intent) {
-      case "start": {
-        await simulation.start();
-        break;
-      }
+  switch (intent) {
+    case "start": {
+      const result = await simulation.start();
 
-      case "stop": {
-        simulation.stop();
-        break;
-      }
-
-      case "restart": {
-        await simulation.restart();
-        break;
-      }
-
-      case "setSpeed": {
-        const speed = Number(form.get("speed"));
-
-        if (speed > 0) {
-          simulation.setSpeed(speed);
-        }
-        break;
-      }
-      default:
-        return data<ApiError>(
-          {
-            ok: false,
-            error: {
-              code: "INVALID_INTENT",
-              message: "Invalid intent",
+      return result.match(
+        () => data<ApiSuccess<null>>({ ok: true, data: null }),
+        (error) => {
+          console.error("Simulation start failed:", error);
+          return data<ApiError>(
+            {
+              ok: false,
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "Internal server error",
+              },
             },
-          },
-          { status: 400 },
-        );
-    }
-  } catch (err) {
-    return data<ApiError>(
-      {
-        ok: false,
-        error: {
-          code: "SIMULATION_ERROR",
-          message: err instanceof Error ? err.message : "Unknown error",
+            { status: 500 },
+          );
         },
-      },
-      { status: 500 },
-    );
-  }
+      );
+    }
 
-  return data<ApiSuccess<null>>({ ok: true, data: null });
+    case "stop": {
+      simulation.stop();
+      return data<ApiSuccess<null>>({ ok: true, data: null });
+    }
+
+    case "restart": {
+      const result = await simulation.restart();
+
+      return result.match(
+        () => data<ApiSuccess<null>>({ ok: true, data: null }),
+        (error) => {
+          console.error("Simulation restart failed:", error);
+          return data<ApiError>(
+            {
+              ok: false,
+              error: {
+                code: "INTERNAL_ERROR",
+                message: "Internal server error",
+              },
+            },
+            { status: 500 },
+          );
+        },
+      );
+    }
+
+    case "setSpeed": {
+      const speed = Number(form.get("speed"));
+
+      if (speed > 0) {
+        simulation.setSpeed(speed);
+      }
+      return data<ApiSuccess<null>>({ ok: true, data: null });
+    }
+
+    default:
+      return data<ApiError>(
+        {
+          ok: false,
+          error: {
+            code: "INVALID_INTENT",
+            message: "Invalid intent",
+          },
+        },
+        { status: 400 },
+      );
+  }
 }
 
 export function useSimulationFetcher() {

@@ -1,13 +1,11 @@
-import { db } from "../db";
+import type { MatchStatus } from "~/utils/match";
 import type { Match } from "../db/schema";
-import { commentary, matches } from "../db/schema";
+import { commentaryService, matchService } from "../services";
 import { playerPoolManager } from "./PlayerPoolManager";
 import { ScoreDistributor } from "./ScoreDistributor";
 import { BASE_DELAY_PER_MINUTE_MS } from "./constants";
 import { createTemplate, getTemplateDuration } from "./templates";
 import type { CommentaryEvent, MatchInfo, ScorePrediction } from "./types";
-import { pubsub } from "$/server/websocket/pubsub";
-import { eq, sql } from "drizzle-orm";
 
 type SimulationCallbacks = {
   onTimerCreated: (timer: NodeJS.Timeout) => void;
@@ -25,7 +23,7 @@ export class MatchSimulator {
   #scoreDistributor: ScoreDistributor | null = null;
   #events: CommentaryEvent[] = [];
   #currentScore = { home: 0, away: 0 };
-  #status: "scheduled" | "live" | "finished" = "scheduled";
+  #status: MatchStatus = "scheduled";
   #extraDuration = 0;
 
   constructor(match: Match, callbacks: SimulationCallbacks) {
@@ -49,7 +47,7 @@ export class MatchSimulator {
     return this.#scoreDistributor?.prediction ?? { home: 0, away: 0 };
   }
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     this.#players = playerPoolManager.getPool(
       this.#matchId,
       this.#match.sport,
@@ -132,37 +130,31 @@ export class MatchSimulator {
   }
 
   private async executeEvent(event: CommentaryEvent): Promise<void> {
-    try {
-      const [entry] = await db
-        .insert(commentary)
-        .values({
-          matchId: this.#matchId,
-          minute: event.minute,
-          sequence: event.sequence,
-          period: event.period,
-          eventType: event.eventType,
-          team: event.team,
-          actor: event.actor,
-          message: event.message,
-          tags: JSON.stringify(event.tags),
-          metadata: event.scoreDelta ?? {},
-        })
-        .returning();
+    const result = await commentaryService.create({
+      matchId: this.#matchId,
+      minute: event.minute,
+      sequence: event.sequence,
+      period: event.period,
+      eventType: event.eventType,
+      team: event.team,
+      actor: event.actor,
+      message: event.message,
+      tags: event.tags ? JSON.stringify(event.tags) : null,
+      metadata: event.scoreDelta ?? {},
+    });
 
-      if (event.scoreDelta) {
-        await this.updateScore(event.scoreDelta);
-      }
-
-      pubsub.broadcast(this.#matchId, {
-        type: "commentary.created",
-        payload: entry,
-      });
-    } catch (err) {
+    if (result.isErr()) {
       console.error("MatchSimulator: Failed to execute event", {
         matchId: this.#matchId,
         event,
-        error: err instanceof Error ? err.message : String(err),
+        error: result.error,
       });
+
+      return;
+    }
+
+    if (event.scoreDelta) {
+      await this.updateScore(event.scoreDelta);
     }
   }
 
@@ -173,52 +165,39 @@ export class MatchSimulator {
     this.#currentScore.home += scoreDelta.home;
     this.#currentScore.away += scoreDelta.away;
 
-    await db
-      .update(matches)
-      .set({
-        homeScore: sql`${matches.homeScore} + ${scoreDelta.home}`,
-        awayScore: sql`${matches.awayScore} + ${scoreDelta.away}`,
-      })
-      .where(eq(matches.id, this.#matchId));
+    const result = await matchService.updateScore(this.#matchId, scoreDelta);
 
-    pubsub.broadcast(this.#matchId, {
-      type: "match.updated",
-      payload: {
-        id: this.#matchId,
-        status: this.#status,
-        homeScore: this.#currentScore.home,
-        awayScore: this.#currentScore.away,
-      },
-    });
+    if (result.isErr()) {
+      console.error("MatchSimulator: Failed to update score", {
+        matchId: this.#matchId,
+        scoreDelta,
+        error: result.error,
+      });
+    }
   }
 
   private async transitionStatus(status: "live" | "finished"): Promise<void> {
     this.#status = status;
 
-    await db
-      .update(matches)
-      .set({ status })
-      .where(eq(matches.id, this.#matchId));
-
-    pubsub.broadcast(this.#matchId, {
-      type: "match.updated",
-      payload: {
-        id: this.#matchId,
-        status,
-        homeScore: this.#currentScore.home,
-        awayScore: this.#currentScore.away,
-      },
-    });
-
     if (status === "finished") {
-      pubsub.broadcast(this.#matchId, {
-        type: "match.finished",
-        payload: {
-          id: this.#matchId,
-          homeScore: this.#currentScore.home,
-          awayScore: this.#currentScore.away,
-        },
-      });
+      const result = await matchService.finish(this.#matchId);
+
+      if (result.isErr()) {
+        console.error("MatchSimulator: Failed to finish match", {
+          matchId: this.#matchId,
+          error: result.error,
+        });
+      }
+    } else {
+      const result = await matchService.updateStatus(this.#matchId, status);
+
+      if (result.isErr()) {
+        console.error("MatchSimulator: Failed to update status", {
+          matchId: this.#matchId,
+          status,
+          error: result.error,
+        });
+      }
     }
   }
 }
