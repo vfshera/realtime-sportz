@@ -1,40 +1,23 @@
 import type { Route } from "./+types/api.matches.$matchId";
-import { data } from "react-router";
-import matches, {
-  type Match,
-  type NewMatch,
-} from "~/.server/db/schema/matches";
+import type { NewMatch } from "~/.server/db/schema/matches";
+import { matchService } from "~/.server/services";
 import {
-  type ApiError,
-  type ApiSuccess,
   methodNotAllowed,
-  notFound,
   requireJson,
+  resultToResponse,
   validationError,
 } from "~/utils/api.server";
 import {
   fullUpdateMatchSchema,
   updateMatchSchema,
 } from "~/validations/matches";
-import { appContext } from "$/server/context";
-import { eq } from "drizzle-orm";
 import z from "zod";
 
-export async function action({ request, context, params }: Route.ActionArgs) {
-  const { db } = context.get(appContext);
-
-  const existingMatch = await db.query.matches.findFirst({
-    where: eq(matches.id, params.matchId),
-  });
-
-  if (!existingMatch) {
-    return notFound("Match not found");
-  }
-
+export async function action({ request, params }: Route.ActionArgs) {
   if (request.method === "DELETE") {
-    await db.delete(matches).where(eq(matches.id, params.matchId));
+    const result = await matchService.delete(params.matchId);
 
-    return data<ApiSuccess<null>>({ ok: true, data: null });
+    return resultToResponse(result);
   }
 
   if (request.method === "PUT") {
@@ -50,13 +33,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       return validationError(z.flattenError(res.error));
     }
 
-    const [updated] = await db
-      .update(matches)
-      .set(res.data as NewMatch)
-      .where(eq(matches.id, params.matchId))
-      .returning();
+    const result = await matchService.update(
+      params.matchId,
+      res.data as NewMatch,
+    );
 
-    return data<ApiSuccess<Match>>({ ok: true, data: updated });
+    return resultToResponse(result);
   }
 
   if (request.method === "PATCH") {
@@ -69,44 +51,22 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     });
 
     if (!res.success) {
-      return data<ApiError>(
-        {
-          ok: false,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Validation failed",
-            details: res.error.issues.map((i) => ({
-              path: i.path,
-              message: i.message,
-            })),
-          },
-        },
-        { status: 422 },
-      );
+      return validationError(z.flattenError(res.error));
     }
 
-    const [updated] = await db
-      .update(matches)
-      .set(res.data as Partial<NewMatch>)
-      .where(eq(matches.id, params.matchId))
-      .returning();
+    const result = await matchService.update(
+      params.matchId,
+      res.data as Partial<NewMatch>,
+    );
 
-    return data<ApiSuccess<Match>>({ ok: true, data: updated });
+    return resultToResponse(result);
   }
 
   return methodNotAllowed();
 }
 
-export async function loader({ context, params }: Route.LoaderArgs) {
-  const { db } = context.get(appContext);
+export async function loader({ params }: Route.LoaderArgs) {
+  const result = await matchService.findById(params.matchId);
 
-  const match = await db.query.matches.findFirst({
-    where: eq(matches.id, params.matchId),
-  });
-
-  if (!match) {
-    return notFound("Match not found");
-  }
-
-  return data<ApiSuccess<Match>>({ ok: true, data: match });
+  return resultToResponse(result);
 }
