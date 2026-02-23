@@ -1,8 +1,13 @@
 import matches from "~/.server/db/schema/matches";
+import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-const baseInsertMatchSchema = createInsertSchema(matches);
+const baseInsertMatchSchema = createInsertSchema(matches, {
+  status: z.enum(
+    Object.values(MATCH_STATUS) as [MatchStatus, ...MatchStatus[]],
+  ),
+});
 
 const validateTimes = (
   data: { startTime?: unknown; endTime?: unknown },
