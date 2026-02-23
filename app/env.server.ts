@@ -42,7 +42,7 @@ const envSchema = z
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
-
+    PUBLIC_APP_NAME: z.string().default("Sportz"),
     PUBLIC_APP_URL: z.url(),
     PUBLIC_APP_WSS_URL: z
       .url()
