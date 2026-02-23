@@ -1,4 +1,6 @@
 import { data } from "react-router";
+import type { ServiceError } from "~/.server/services";
+import type { Result } from "neverthrow";
 
 export async function requireJson<T = unknown>(request: Request): Promise<T> {
   const contentType = request.headers.get("content-type");
@@ -98,5 +100,50 @@ export function notFound(message = "Resource not found") {
       },
     },
     { status: 404 },
+  );
+}
+
+/**
+ * Converts a ServiceError to a JSON API error response.
+ *
+ * @param error - The ServiceError to convert.
+ *
+ * @returns A JSON API error response.
+ */
+export function serviceErrorToResponse(error: ServiceError) {
+  const status = error.type === "NOT_FOUND" ? 404 : 500;
+
+  const message =
+    error.type === "NOT_FOUND"
+      ? `${error.resource} not found: ${error.id}`
+      : error.message;
+
+  return data<ApiError>(
+    {
+      ok: false,
+      error: {
+        code: error.type,
+        message,
+      },
+    },
+    { status },
+  );
+}
+
+/**
+ * Converts a Result to a JSON API response.
+ *
+ * @param result - The Result to convert.
+ * @param options - Optional response options.
+ *
+ * @returns A JSON API response.
+ */
+export function resultToResponse<T>(
+  result: Result<T, ServiceError>,
+  options?: { success?: number | ResponseInit },
+) {
+  return result.match(
+    (value) => data<ApiSuccess<T>>({ ok: true, data: value }, options?.success),
+    (error) => serviceErrorToResponse(error),
   );
 }
