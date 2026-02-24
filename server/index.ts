@@ -3,7 +3,7 @@ import { db } from "~/.server/db";
 import { simulation } from "~/.server/simulator";
 import { clientEnv, env } from "~/env.server";
 import { appContext } from "./context";
-import { loggerMiddleware } from "./logger";
+import { log, loggerMiddleware } from "./logger";
 import {
   aiBotBlocker,
   botBlocker,
@@ -65,16 +65,21 @@ const server = await createHonoServer<AppBindings>({
 });
 
 closeWithGrace({ delay: 5000 }, async ({ signal, err }) => {
-  console.log(`[${signal}] received`);
+  log.info({
+    source: "server",
+    action: "shutdown",
+    signal,
+    status: "starting",
+  });
 
   if (err) {
-    console.error("Server closing with error:", err);
-  } else {
-    console.log(`Server shutting down...`);
+    log.error({ source: "server", action: "shutdown", error: err });
   }
 
   simulation.stop();
   pubsub.destroy();
+
+  log.info({ source: "server", action: "shutdown", status: "complete" });
 });
 
 export default server;
