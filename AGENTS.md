@@ -40,6 +40,17 @@ bun run db:setup           # Generate and run migrations
 - **Validation:** Zod + drizzle-zod
 - **Package Manager:** Bun
 
+## Global Rules
+
+### Package Manager
+
+**Always use the local package manager (Bun)** when the package manager is not explicitly specified in commands or documentation. This applies to:
+
+- Installing new dependencies: `bun add <package>`
+- Installing dev dependencies: `bun add -D <package>`
+- Running scripts: `bun <script>`
+- Global installations: `bun add -g <package>`
+
 ## Import Conventions
 
 ### Import Order (enforced by Prettier)
