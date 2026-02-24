@@ -3,6 +3,7 @@ import { db } from "~/.server/db";
 import { simulation } from "~/.server/simulator";
 import { clientEnv, env } from "~/env.server";
 import { appContext } from "./context";
+import { loggerMiddleware } from "./logger";
 import {
   aiBotBlocker,
   botBlocker,
@@ -22,9 +23,11 @@ import type { WSEvents } from "hono/ws";
 import { createHonoServer } from "react-router-hono-server/node";
 
 const server = await createHonoServer<AppBindings>({
+  defaultLogger: false,
   useWebSocket: true,
   beforeAll(server) {
     server.use(requestId());
+    server.use(loggerMiddleware);
     server.use(secureHeaders());
     server.use("/robots.txt", robotsTxt);
     server.use(aiBotBlocker);
@@ -54,6 +57,7 @@ const server = await createHonoServer<AppBindings>({
       env,
       clientEnv,
       db,
+      log: ctx.get("log"),
     });
 
     return context;
