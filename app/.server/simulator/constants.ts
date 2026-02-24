@@ -81,4 +81,4 @@ export const DEFAULT_SPEED_MULTIPLIER = 1;
 
 export const BASE_DELAY_PER_MINUTE_MS = 1000;
 
-export const RESTART_DELAY_MS = 30000;
+export const RESTART_DELAY_MS = 15000;

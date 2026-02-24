@@ -170,6 +170,8 @@ export class SimulationManager {
 
       await sleep(MATCH_CREATION_DELAY_MS / this.#speedMultiplier);
     }
+
+    this.#running = false;
   }
 
   private clearTimers(): void {
