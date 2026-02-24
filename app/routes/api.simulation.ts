@@ -1,24 +1,43 @@
 import type { Route } from "./+types/api.simulation";
 import { data, useFetcher } from "react-router";
 import { simulation } from "~/.server/simulator";
-import type { ApiError, ApiSuccess } from "~/utils/api.server";
-import { log } from "$/server/logger";
+import {
+  type ApiError,
+  type ApiSuccess,
+  resultToResponse,
+} from "~/utils/api.server";
+import { appContext } from "$/server/context";
 
 type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
 
   const intent = form.get("intent") as SimulationActionIntent | null;
 
+  const { log } = context.get(appContext);
+
+  const url = new URL(request.url);
+
   if (!intent) {
+    const error = {
+      code: "MISSING_INTENT",
+      message: "Missing intent",
+    };
+
+    log.set({
+      source: "api",
+      route: url.pathname,
+      intent,
+      action: intent,
+      error,
+      status: 400,
+    });
+
     return data<ApiError>(
       {
         ok: false,
-        error: {
-          code: "MISSING_INTENT",
-          message: "Missing intent",
-        },
+        error,
       },
       { status: 400 },
     );
@@ -28,28 +47,17 @@ export async function action({ request }: Route.ActionArgs) {
     case "start": {
       const result = await simulation.start();
 
-      return result.match(
-        () => data<ApiSuccess<null>>({ ok: true, data: null }),
-        (error) => {
-          log.error({
+      return resultToResponse(result, {
+        logging: {
+          log,
+          context: {
             source: "api",
-            route: "/api/simulation",
+            route: url.pathname,
             action: "start",
-            error,
-          });
-
-          return data<ApiError>(
-            {
-              ok: false,
-              error: {
-                code: "INTERNAL_ERROR",
-                message: "Internal server error",
-              },
-            },
-            { status: 500 },
-          );
+            intent,
+          },
         },
-      );
+      });
     }
 
     case "stop": {
@@ -61,28 +69,17 @@ export async function action({ request }: Route.ActionArgs) {
     case "restart": {
       const result = await simulation.restart();
 
-      return result.match(
-        () => data<ApiSuccess<null>>({ ok: true, data: null }),
-        (error) => {
-          log.error({
+      return resultToResponse(result, {
+        logging: {
+          log,
+          context: {
             source: "api",
-            route: "/api/simulation",
+            route: url.pathname,
             action: "restart",
-            error,
-          });
-
-          return data<ApiError>(
-            {
-              ok: false,
-              error: {
-                code: "INTERNAL_ERROR",
-                message: "Internal server error",
-              },
-            },
-            { status: 500 },
-          );
+            intent,
+          },
         },
-      );
+      });
     }
 
     case "setSpeed": {
@@ -95,17 +92,28 @@ export async function action({ request }: Route.ActionArgs) {
       return data<ApiSuccess<null>>({ ok: true, data: null });
     }
 
-    default:
+    default: {
+      const error = {
+        code: "INVALID_INTENT",
+        message: "Invalid intent",
+      };
+
+      log.set({
+        source: "api",
+        route: url.pathname,
+        action: "invalid_intent",
+        error,
+        status: 400,
+      });
+
       return data<ApiError>(
         {
           ok: false,
-          error: {
-            code: "INVALID_INTENT",
-            message: "Invalid intent",
-          },
+          error,
         },
         { status: 400 },
       );
+    }
   }
 }
 

@@ -1,6 +1,13 @@
 import { data } from "react-router";
 import type { ServiceError } from "~/.server/services";
+import type { SimulationError } from "~/.server/simulator";
+import type { RequestLogger } from "evlog";
 import type { Result } from "neverthrow";
+
+export type LoggingOptions = {
+  log: RequestLogger;
+  context: Record<string, unknown>;
+};
 
 export async function requireJson<T = unknown>(request: Request): Promise<T> {
   const contentType = request.headers.get("content-type");
@@ -66,15 +73,30 @@ export function methodNotAllowed() {
  *
  * @returns A JSON API error response.
  */
-export function validationError<T = unknown>(details: T) {
+export function validationError<T = unknown>(
+  details: T,
+  logging?: LoggingOptions,
+) {
+  const error = {
+    code: "VALIDATION_ERROR",
+    message: "Validation failed",
+    details,
+  };
+
+  if (logging) {
+    const { log, context = {} } = logging;
+
+    log.set({
+      ...context,
+      error,
+      status: 422,
+    });
+  }
+
   return data<ApiError>(
     {
       ok: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Validation failed",
-        details,
-      },
+      error,
     },
     { status: 422 },
   );
@@ -104,33 +126,6 @@ export function notFound(message = "Resource not found") {
 }
 
 /**
- * Converts a ServiceError to a JSON API error response.
- *
- * @param error - The ServiceError to convert.
- *
- * @returns A JSON API error response.
- */
-export function serviceErrorToResponse(error: ServiceError) {
-  const status = error.type === "NOT_FOUND" ? 404 : 500;
-
-  const message =
-    error.type === "NOT_FOUND"
-      ? `${error.resource} not found: ${error.id}`
-      : error.message;
-
-  return data<ApiError>(
-    {
-      ok: false,
-      error: {
-        code: error.type,
-        message,
-      },
-    },
-    { status },
-  );
-}
-
-/**
  * Converts a Result to a JSON API response.
  *
  * @param result - The Result to convert.
@@ -139,11 +134,42 @@ export function serviceErrorToResponse(error: ServiceError) {
  * @returns A JSON API response.
  */
 export function resultToResponse<T>(
-  result: Result<T, ServiceError>,
-  options?: { success?: number | ResponseInit },
+  result: Result<T, ServiceError | SimulationError>,
+  options?: {
+    success?: number | ResponseInit;
+    logging?: LoggingOptions;
+  },
 ) {
   return result.match(
     (value) => data<ApiSuccess<T>>({ ok: true, data: value }, options?.success),
-    (error) => serviceErrorToResponse(error),
+    (error) => {
+      const status = error.type === "NOT_FOUND" ? 404 : 500;
+
+      if (options?.logging) {
+        const { log, context = {} } = options.logging;
+
+        log.set({
+          ...context,
+          error,
+          status,
+        });
+      }
+
+      const message =
+        error.type === "NOT_FOUND"
+          ? "Resource not found"
+          : "Internal server error";
+
+      return data<ApiError>(
+        {
+          ok: false,
+          error: {
+            code: error.type,
+            message,
+          },
+        },
+        { status },
+      );
+    },
   );
 }
