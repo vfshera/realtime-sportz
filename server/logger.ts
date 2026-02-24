@@ -8,6 +8,8 @@ initLogger({
   pretty: env.DEV,
 });
 
+export { log };
+
 export const loggerMiddleware = createMiddleware<AppBindings>(
   async (c, next) => {
     const startedAt = Date.now();
