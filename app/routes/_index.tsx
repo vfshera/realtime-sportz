@@ -1,6 +1,6 @@
 import type { Route } from "./+types/_index";
-import { type CSSProperties, useEffect, useState } from "react";
-import type { Match } from "~/.server/db/schema";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import type { Commentary, Match } from "~/.server/db/schema";
 import HomeSkeleton from "~/components/HomeSkeleton";
 import Button from "~/components/ui/button";
 import { WebSocketProvider, useWebSocketContext } from "~/providers";
@@ -24,13 +24,9 @@ export async function loader({ context }: Route.LoaderArgs) {
       ),
   });
 
-  const hasLiveMatches = todaysMatches.some((m) => {
-    const now = Date.now();
-
-    return m.startTime.getTime() <= now && now < m.endTime.getTime();
-  });
-
-  return { todaysMatches, hasLiveMatches };
+  return {
+    todaysMatches,
+  };
 }
 
 export default function Index({ matches, loaderData }: Route.ComponentProps) {
@@ -47,11 +43,18 @@ export default function Index({ matches, loaderData }: Route.ComponentProps) {
   );
 }
 
-function HomePage({
-  todaysMatches,
-  hasLiveMatches,
-}: Route.ComponentProps["loaderData"]) {
+function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
   const [matches, setMatches] = useState(todaysMatches);
+
+  const [commentaries, setCommentaries] = useState<Commentary[] | null>(null);
+
+  const hasLiveMatches = useMemo(() => {
+    return matches.some((m) => m.status !== "finished") && matches.length > 0;
+  }, [matches]);
+
+  const allMatchesFinished = useMemo(() => {
+    return matches.every((m) => m.status === "finished") && matches.length > 0;
+  }, [matches]);
 
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
@@ -63,6 +66,10 @@ function HomePage({
     function setupEventListeners() {
       const offWelcome = on("welcome", ({ message }) => {
         console.log(`Received welcome message from server:\n'${message}'`);
+      });
+
+      const offCommentaryCreated = on("commentary.created", (payload) => {
+        console.log("New commentary created: ", payload);
       });
 
       const offMatchCreated = on("match.created", (payload) => {
@@ -104,6 +111,7 @@ function HomePage({
         offMatchCreated();
         offMatchUpdated();
         offMatchFinished();
+        offCommentaryCreated();
       };
     },
     [on],
@@ -142,21 +150,21 @@ function HomePage({
         </div>
       </header>
 
-      {!hasLiveMatches && !!matches.length && (
+      {allMatchesFinished && (
         <div className="py-12">
           <div className="flex flex-col items-center gap-4">
             <h2 className="text-2xl font-bold -tracking-[1px]">
-              Seems like there are no live matches now.
+              All matches have finished
             </h2>
 
             <Button variant="primary" onClick={() => fetcher.submit("restart")}>
-              Restart Simulation
+              Start New Matches
             </Button>
           </div>
         </div>
       )}
 
-      {!!matches?.length ? (
+      {hasLiveMatches && (
         <>
           <div className="animate-fade-in grid grid-cols-1 gap-6 py-8 min-[1200px]:grid-cols-[1fr_420px]">
             <div className="matches-section">
@@ -258,38 +266,41 @@ function HomePage({
                     </div>
                   </div>
 
-                  <div className="commentary-feed flex-1 overflow-y-auto pr-3">
-                    {/* {COMMENTARY_ITEMS.map((item, i) => (
-                      <div
-                        key={i}
-                        className="commentary-item animate-slide-in-comment mb-4"
-                      >
-                        <div className="text-text-secondary mb-2 flex items-center gap-3">
-                          <div className="commentary-time font-space-mono text-xs font-bold">
-                            {item.time}
+                  {!!commentaries && (
+                    <div className="commentary-feed flex-1 overflow-y-auto pr-3">
+                      {commentaries.map((item) => (
+                        <div
+                          key={item.id}
+                          className="commentary-item animate-slide-in-comment mb-4"
+                        >
+                          {JSON.stringify(item)}
+                          {/* <div className="text-text-secondary mb-2 flex items-center gap-3">
+                            <div className="commentary-time font-space-mono text-xs font-bold">
+                              {item.time}
+                            </div>
+                            <div className="commentary-over text-[11px] font-semibold">
+                              {item.over}
+                            </div>
+                            <div className="commentary-inning text-[11px] font-semibold">
+                              {item.innings}
+                            </div>
+                            <div className="commentary-type type-six rounded-md px-2.5 py-1 text-[10px] font-extrabold tracking-[0.5px] uppercase">
+                              {item.type}
+                            </div>
                           </div>
-                          <div className="commentary-over text-[11px] font-semibold">
-                            {item.over}
+                          <div className="commentary-player text-dark mb-1 text-[13px] font-bold">
+                            {item.player} · {item.team}
                           </div>
-                          <div className="commentary-inning text-[11px] font-semibold">
-                            {item.innings}
+                          <div className="commentary-text text-text text-sm leading-normal">
+                            {item.text}
                           </div>
-                          <div className="commentary-type type-six rounded-md px-2.5 py-1 text-[10px] font-extrabold tracking-[0.5px] uppercase">
-                            {item.type}
-                          </div>
+                          <span className="commentary-detail text-text-secondary mt-2 block text-[11px] font-semibold tracking-[0.5px] uppercase">
+                            {item.detail}
+                          </span> */}
                         </div>
-                        <div className="commentary-player text-dark mb-1 text-[13px] font-bold">
-                          {item.player} · {item.team}
-                        </div>
-                        <div className="commentary-text text-text text-sm leading-normal">
-                          {item.text}
-                        </div>
-                        <span className="commentary-detail text-text-secondary mt-2 block text-[11px] font-semibold tracking-[0.5px] uppercase">
-                          {item.detail}
-                        </span>
-                      </div>
-                    ))} */}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="border-dark flex h-full max-h-[calc(100vh-180px)] flex-col items-center justify-center rounded-2xl border-3 border-dotted p-6">
@@ -326,7 +337,9 @@ function HomePage({
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {matches.length === 0 && (
         <div className="py-8">
           <div className="flex flex-col items-center gap-4">
             <h2 className="text-2xl font-bold -tracking-[1px]">
