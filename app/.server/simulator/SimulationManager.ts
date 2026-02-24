@@ -5,7 +5,11 @@ import { commentary, matches } from "../db/schema";
 import { matchService } from "../services";
 import { MatchSimulator } from "./MatchSimulator";
 import { playerPoolManager } from "./PlayerPoolManager";
-import { DEFAULT_SPEED_MULTIPLIER, MATCH_CREATION_DELAY_MS } from "./constants";
+import {
+  DEFAULT_SPEED_MULTIPLIER,
+  MATCH_CREATION_DELAY_MS,
+  RESTART_DELAY_MS,
+} from "./constants";
 import {
   type SimulationError,
   alreadyRunning,
@@ -71,6 +75,11 @@ export class SimulationManager {
       Promise.all([db.delete(matches), db.delete(commentary)]),
       (e) => dbClearFailed(e),
     )
+      .andThen(() =>
+        ResultAsync.fromPromise(sleep(RESTART_DELAY_MS), (e) =>
+          dbClearFailed(e),
+        ),
+      )
       .andThen(() => this.start())
       .orElse((error) => {
         log.error({
