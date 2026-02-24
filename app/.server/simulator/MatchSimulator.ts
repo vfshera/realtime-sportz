@@ -6,6 +6,7 @@ import { ScoreDistributor } from "./ScoreDistributor";
 import { BASE_DELAY_PER_MINUTE_MS } from "./constants";
 import { createTemplate, getTemplateDuration } from "./templates";
 import type { CommentaryEvent, MatchInfo, ScorePrediction } from "./types";
+import { log } from "$/server/logger";
 
 type SimulationCallbacks = {
   onTimerCreated: (timer: NodeJS.Timeout) => void;
@@ -144,9 +145,12 @@ export class MatchSimulator {
     });
 
     if (result.isErr()) {
-      console.error("MatchSimulator: Failed to execute event", {
+      log.error({
+        source: "MatchSimulator",
+        action: "executeEvent",
         matchId: this.#matchId,
-        event,
+        sport: this.#match.sport,
+        event: { type: event.eventType, minute: event.minute },
         error: result.error,
       });
 
@@ -168,8 +172,11 @@ export class MatchSimulator {
     const result = await matchService.updateScore(this.#matchId, scoreDelta);
 
     if (result.isErr()) {
-      console.error("MatchSimulator: Failed to update score", {
+      log.error({
+        source: "MatchSimulator",
+        action: "updateScore",
         matchId: this.#matchId,
+        sport: this.#match.sport,
         scoreDelta,
         error: result.error,
       });
@@ -183,8 +190,11 @@ export class MatchSimulator {
       const result = await matchService.finish(this.#matchId);
 
       if (result.isErr()) {
-        console.error("MatchSimulator: Failed to finish match", {
+        log.error({
+          source: "MatchSimulator",
+          action: "finishMatch",
           matchId: this.#matchId,
+          sport: this.#match.sport,
           error: result.error,
         });
       }
@@ -192,8 +202,11 @@ export class MatchSimulator {
       const result = await matchService.updateStatus(this.#matchId, status);
 
       if (result.isErr()) {
-        console.error("MatchSimulator: Failed to update status", {
+        log.error({
+          source: "MatchSimulator",
+          action: "updateStatus",
           matchId: this.#matchId,
+          sport: this.#match.sport,
           status,
           error: result.error,
         });

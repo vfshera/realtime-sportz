@@ -13,6 +13,7 @@ import {
   matchesExist,
 } from "./errors";
 import type { ScorePrediction, SimulationStats } from "./types";
+import { log } from "$/server/logger";
 import { ResultAsync, errAsync } from "neverthrow";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -72,11 +73,12 @@ export class SimulationManager {
     )
       .andThen(() => this.start())
       .orElse((error) => {
-        // If clear failed but we already stopped, log and return error
-        console.error(
-          "SimulationManager: Failed to clear database during restart",
+        log.error({
+          source: "SimulationManager",
+          action: "restart",
+          operation: "clearDatabase",
           error,
-        );
+        });
 
         return errAsync(error);
       });
@@ -143,9 +145,15 @@ export class SimulationManager {
           simulator.start();
         },
         (error) => {
-          console.error("SimulationManager: Failed to create match", {
-            index: i,
-            raw,
+          log.error({
+            source: "SimulationManager",
+            action: "createMatch",
+            match: {
+              index: i,
+              sport: raw.sport,
+              homeTeam: raw.homeTeam,
+              awayTeam: raw.awayTeam,
+            },
             error,
           });
         },
