@@ -6,8 +6,10 @@ import {
 } from "~/validations/transport/messages";
 import type { AppBindings } from "../types";
 import { pubsub } from "./pubsub";
+import { log } from "$/server/logger";
 import type { Context } from "hono";
 import type { WSEvents } from "hono/ws";
+import z from "zod";
 
 const violations = new WeakMap<NodeWSContext, number>();
 
@@ -23,7 +25,7 @@ function sendError(ws: NodeWSContext, message: string, details?: unknown) {
       } satisfies ServerMessage),
     );
   } catch (err) {
-    console.error("Failed to send error message:", err);
+    log.error({ source: "websocket", action: "sendError", error: err });
   }
 }
 
@@ -38,11 +40,20 @@ function parseIncomingMessage(data: string, ws: NodeWSContext): unknown | null {
   try {
     return JSON.parse(data);
   } catch (err) {
-    console.error("Invalid JSON received:", err);
+    log.error({
+      source: "websocket",
+      action: "parseMessage",
+      status: "invalid_json",
+      error: err,
+    });
     sendError(ws, "Invalid JSON format");
 
     if (recordViolation(ws)) {
-      console.warn("Closing connection due to repeated invalid messages");
+      log.warn({
+        source: "websocket",
+        action: "closeConnection",
+        reason: "repeated_invalid_messages",
+      });
       ws.close(1003, "Too many invalid messages");
     }
 
@@ -55,8 +66,7 @@ export function createWSHandler(
 ): WSEvents<RawWebSocket> {
   return {
     onOpen(_, ws) {
-      console.log("New connection ⬆️");
-
+      log.info({ source: "websocket", action: "connection", status: "open" });
       pubsub.addSocket(ws);
     },
 
@@ -70,13 +80,21 @@ export function createWSHandler(
       const result = clientMessageSchema.safeParse(parsed);
 
       if (!result.success) {
-        console.error("Schema validation failed:", result.error.flatten());
-        sendError(ws, "Invalid message format", result.error.flatten());
+        const errors = z.flattenError(result.error);
+        log.error({
+          source: "websocket",
+          action: "validateMessage",
+          status: "validation_failed",
+          errors,
+        });
+        sendError(ws, "Invalid message format", errors);
 
         if (recordViolation(ws)) {
-          console.warn(
-            "Closing connection due to repeated validation failures",
-          );
+          log.warn({
+            source: "websocket",
+            action: "closeConnection",
+            reason: "repeated_validation_failures",
+          });
           ws.close(1008, "Too many invalid messages");
         }
 
@@ -88,36 +106,52 @@ export function createWSHandler(
       try {
         switch (data.type) {
           case "subscribe": {
-            console.log(`Subscribing to match: ${data.payload.matchId}`);
+            log.info({
+              source: "websocket",
+              action: "subscribe",
+              matchId: data.payload.matchId,
+            });
             pubsub.subscribe(ws, data.payload.matchId);
             break;
           }
 
           case "unsubscribe": {
-            console.log(`Unsubscribing from match: ${data.payload.matchId}`);
+            log.info({
+              source: "websocket",
+              action: "unsubscribe",
+              matchId: data.payload.matchId,
+            });
             pubsub.unsubscribe(ws, data.payload.matchId);
             break;
           }
 
           default: {
             const _exhaustive: never = data;
-            console.error("Unhandled message type: ", _exhaustive);
+            log.error({
+              source: "websocket",
+              action: "unhandledMessageType",
+              data: _exhaustive,
+            });
           }
         }
       } catch (err) {
-        console.error("Error handling message:", err);
+        log.error({
+          source: "websocket",
+          action: "handleMessage",
+          error: err,
+        });
         sendError(ws, "Internal server error");
       }
     },
 
     onClose(_, ws) {
-      console.log("Connection closed ⬇️");
+      log.info({ source: "websocket", action: "connection", status: "closed" });
       pubsub.removeSocket(ws);
       violations.delete(ws);
     },
 
     onError(err, ws) {
-      console.error("WebSocket error: ", err);
+      log.error({ source: "websocket", action: "error", error: err });
       pubsub.removeSocket(ws);
       violations.delete(ws);
       ws.raw?.terminate();

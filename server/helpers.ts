@@ -2,6 +2,7 @@ import { env } from "~/env.server";
 import type { NodeWSContext } from "~/types/ws";
 import type { ServerMessage } from "~/validations/transport/messages";
 import type { AppBindings } from "./types";
+import { log } from "$/server/logger";
 import { getConnInfo } from "@hono/node-server/conninfo";
 import type { Context } from "hono";
 
@@ -24,7 +25,11 @@ export function sendMessage(
 
     return true;
   } catch (error) {
-    console.error("Failed to send message:", error);
+    log.error({
+      source: "websocket.helpers",
+      action: "sendMessage",
+      error,
+    });
 
     return false;
   }

@@ -2,6 +2,7 @@
 import type { NodeWSContext } from "~/types/ws";
 import type { ServerMessage } from "~/validations/transport/messages";
 import { sendMessage } from "../helpers";
+import { log } from "$/server/logger";
 
 class MatchPubSub {
   #matchRooms = new Map<string, Set<NodeWSContext>>();
@@ -39,15 +40,23 @@ class MatchPubSub {
       socket.subscriptions &&
       socket.subscriptions.size >= this.#MAX_SUBSCRIPTIONS_PER_SOCKET
     ) {
-      console.warn(
-        `Socket exceeded max subscriptions (${this.#MAX_SUBSCRIPTIONS_PER_SOCKET})`,
-      );
+      log.warn({
+        source: "pubsub",
+        action: "subscribe",
+        status: "max_subscriptions_exceeded",
+        maxSubscriptions: this.#MAX_SUBSCRIPTIONS_PER_SOCKET,
+      });
 
       return false;
     }
 
     if (!matchId || typeof matchId !== "string") {
-      console.error("Invalid matchId provided");
+      log.error({
+        source: "pubsub",
+        action: "subscribe",
+        status: "invalid_matchId",
+        matchId,
+      });
 
       return false;
     }
@@ -64,7 +73,12 @@ class MatchPubSub {
 
     this.#matchRooms.get(matchId)!.add(ws);
 
-    console.log(`Socket subscribed to match: ${matchId}`);
+    log.info({
+      source: "pubsub",
+      action: "subscribe",
+      matchId,
+      status: "success",
+    });
 
     return true;
   }
@@ -82,14 +96,24 @@ class MatchPubSub {
 
     ws.raw!.subscriptions!.delete(matchId);
 
-    console.log(`Socket unsubscribed from match: ${matchId}`);
+    log.info({
+      source: "pubsub",
+      action: "unsubscribe",
+      matchId,
+      status: "success",
+    });
   }
 
   broadcast(matchId: string, message: ServerMessage) {
     const room = this.#matchRooms.get(matchId);
 
     if (!room || room.size === 0) {
-      console.warn(`No subscribers for match: ${matchId}`);
+      log.warn({
+        source: "pubsub",
+        action: "broadcast",
+        status: "no_subscribers",
+        matchId,
+      });
 
       return;
     }
@@ -125,7 +149,11 @@ class MatchPubSub {
 
   startHeartbeat(intervalMs = this.#HEARTBEAT_INTERVAL_MS) {
     if (this.#heartbeatInterval) {
-      console.warn("Heartbeat already running");
+      log.warn({
+        source: "pubsub",
+        action: "startHeartbeat",
+        status: "already_running",
+      });
 
       return;
     }
@@ -148,7 +176,12 @@ class MatchPubSub {
       }
     }, intervalMs);
 
-    console.log(`Heartbeat started (interval: ${intervalMs}ms)`);
+    log.info({
+      source: "pubsub",
+      action: "startHeartbeat",
+      intervalMs,
+      status: "started",
+    });
   }
 
   stopHeartbeat() {
@@ -156,7 +189,11 @@ class MatchPubSub {
       clearInterval(this.#heartbeatInterval);
       this.#heartbeatInterval = null;
 
-      console.log("Heartbeat stopped");
+      log.info({
+        source: "pubsub",
+        action: "stopHeartbeat",
+        status: "stopped",
+      });
     }
   }
 
@@ -169,13 +206,18 @@ class MatchPubSub {
           ws.close(1001, "Server shutting down");
         }
       } catch (err) {
-        console.error("Failed to close socket:", err);
+        log.error({
+          source: "pubsub",
+          action: "destroy",
+          status: "failed_to_close_socket",
+          error: err,
+        });
       }
     }
 
     this.#sockets.clear();
     this.#matchRooms.clear();
-    console.log("PubSub destroyed");
+    log.info({ source: "pubsub", action: "destroy", status: "destroyed" });
   }
 
   getStats() {
