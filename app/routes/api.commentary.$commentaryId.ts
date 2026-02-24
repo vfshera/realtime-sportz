@@ -11,13 +11,28 @@ import {
   fullUpdateCommentarySchema,
   updateCommentarySchema,
 } from "~/validations/commentary";
+import { appContext } from "$/server/context";
 import z from "zod";
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const { log } = context.get(appContext);
+
+  const url = new URL(request.url);
+
   if (request.method === "DELETE") {
     const result = await commentaryService.delete(params.commentaryId);
 
-    return resultToResponse(result);
+    return resultToResponse(result, {
+      logging: {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+          action: "delete",
+          commentaryId: params.commentaryId,
+        },
+      },
+    });
   }
 
   if (request.method === "PUT") {
@@ -26,7 +41,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     const res = fullUpdateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
-      return validationError(z.flattenError(res.error));
+      return validationError(z.flattenError(res.error), {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+          action: "update",
+          method: request.method,
+          commentaryId: params.commentaryId,
+        },
+      });
     }
 
     const result = await commentaryService.update(
@@ -34,7 +58,18 @@ export async function action({ request, params }: Route.ActionArgs) {
       res.data as NewCommentary,
     );
 
-    return resultToResponse(result);
+    return resultToResponse(result, {
+      logging: {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+          action: "update",
+          method: request.method,
+          commentaryId: params.commentaryId,
+        },
+      },
+    });
   }
 
   if (request.method === "PATCH") {
@@ -43,7 +78,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     const res = updateCommentarySchema.safeParse(raw);
 
     if (!res.success) {
-      return validationError(z.flattenError(res.error));
+      return validationError(z.flattenError(res.error), {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+          action: "update",
+          method: request.method,
+          commentaryId: params.commentaryId,
+        },
+      });
     }
 
     const result = await commentaryService.update(
@@ -51,14 +95,38 @@ export async function action({ request, params }: Route.ActionArgs) {
       res.data as Partial<NewCommentary>,
     );
 
-    return resultToResponse(result);
+    return resultToResponse(result, {
+      logging: {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+          action: "update",
+          method: request.method,
+          commentaryId: params.commentaryId,
+        },
+      },
+    });
   }
 
   return methodNotAllowed();
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const { log } = context.get(appContext);
+
+  const url = new URL(request.url);
+
   const result = await commentaryService.findById(params.commentaryId);
 
-  return resultToResponse(result);
+  return resultToResponse(result, {
+    logging: {
+      log,
+      context: {
+        source: "api",
+        route: url.pathname,
+        commentaryId: params.commentaryId,
+      },
+    },
+  });
 }

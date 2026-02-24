@@ -1,5 +1,4 @@
 import type { Route } from "./+types/api.matches";
-import type { Match } from "~/.server/db/schema/matches";
 import { matchService } from "~/.server/services";
 import {
   methodNotAllowed,
@@ -8,12 +7,17 @@ import {
   validationError,
 } from "~/utils/api.server";
 import { createMatchSchema } from "~/validations/matches";
+import { appContext } from "$/server/context";
 import z from "zod";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {
     return methodNotAllowed();
   }
+
+  const { log } = context.get(appContext);
+
+  const url = new URL(request.url);
 
   const raw = await requireJson<Record<string, unknown>>(request);
 
@@ -24,16 +28,45 @@ export async function action({ request }: Route.ActionArgs) {
   });
 
   if (!res.success) {
-    return validationError(z.flattenError(res.error));
+    return validationError(z.flattenError(res.error), {
+      log,
+      context: {
+        source: "api",
+        route: url.pathname,
+        action: "create",
+      },
+    });
   }
 
   const result = await matchService.create(res.data);
 
-  return resultToResponse(result, { success: 201 });
+  return resultToResponse(result, {
+    success: { status: 201 },
+    logging: {
+      log,
+      context: {
+        source: "api",
+        route: url.pathname,
+        action: "create",
+      },
+    },
+  });
 }
 
-export async function loader() {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { log } = context.get(appContext);
+
+  const url = new URL(request.url);
+
   const result = await matchService.findAll();
 
-  return resultToResponse(result);
+  return resultToResponse(result, {
+    logging: {
+      log,
+      context: {
+        source: "api",
+        route: url.pathname,
+      },
+    },
+  });
 }
