@@ -1,11 +1,7 @@
 import type { Route } from "./+types/api.simulation";
 import { data, useFetcher } from "react-router";
 import { simulation } from "~/.server/simulator";
-import {
-  type ApiError,
-  type ApiSuccess,
-  resultToResponse,
-} from "~/utils/api.server";
+import type { ApiError, ApiSuccess } from "~/utils/api.server";
 import { appContext } from "$/server/context";
 
 type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
@@ -15,7 +11,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const intent = form.get("intent") as SimulationActionIntent | null;
 
-  const { log } = context.get(appContext);
+  const { db, log } = context.get(appContext);
 
   const url = new URL(request.url);
 
@@ -45,19 +41,59 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   switch (intent) {
     case "start": {
-      const result = await simulation.start();
+      if (simulation.running) {
+        const error = {
+          code: "SIMULATION_RUNNING",
+          message: "Simulation is already running",
+        };
 
-      return resultToResponse(result, {
-        logging: {
-          log,
-          context: {
-            source: "api",
-            route: url.pathname,
-            action: "start",
-            intent,
+        log.set({
+          source: "api",
+          route: url.pathname,
+          action: "start",
+          intent,
+          error,
+          status: 409,
+        });
+
+        return data<ApiError>(
+          {
+            ok: false,
+            error,
+          },
+          { status: 409 },
+        );
+      }
+
+      const existingMatches = await db.query.matches.findMany();
+
+      if (existingMatches.length > 0) {
+        void simulation.restart();
+
+        return data<ApiSuccess<{ initiated: true; message: string }>>(
+          {
+            ok: true,
+            data: {
+              initiated: true,
+              message: "Restart initiated - matches will appear shortly",
+            },
+          },
+          { status: 202 },
+        );
+      }
+
+      void simulation.start();
+
+      return data<ApiSuccess<{ initiated: true; message: string }>>(
+        {
+          ok: true,
+          data: {
+            initiated: true,
+            message: "Simulation started",
           },
         },
-      });
+        { status: 202 },
+      );
     }
 
     case "stop": {
@@ -67,19 +103,42 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 
     case "restart": {
-      const result = await simulation.restart();
+      if (simulation.running) {
+        const error = {
+          code: "SIMULATION_RUNNING",
+          message: "Simulation is already running",
+        };
 
-      return resultToResponse(result, {
-        logging: {
-          log,
-          context: {
-            source: "api",
-            route: url.pathname,
-            action: "restart",
-            intent,
+        log.set({
+          source: "api",
+          route: url.pathname,
+          action: "restart",
+          intent,
+          error,
+          status: 409,
+        });
+
+        return data<ApiError>(
+          {
+            ok: false,
+            error,
+          },
+          { status: 409 },
+        );
+      }
+
+      void simulation.restart();
+
+      return data<ApiSuccess<{ initiated: true; message: string }>>(
+        {
+          ok: true,
+          data: {
+            initiated: true,
+            message: "Restart initiated - matches will appear shortly",
           },
         },
-      });
+        { status: 202 },
+      );
     }
 
     case "setSpeed": {
