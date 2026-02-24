@@ -13,7 +13,7 @@ export class MatchService {
       db.insert(matches).values(data).returning(),
       (e) => databaseError(e instanceof Error ? e.message : String(e)),
     ).andThen(([match]) => {
-      pubsub.broadcast(match.id, { type: "match.created", payload: match });
+      pubsub.broadcastToAll({ type: "match.created", payload: match });
 
       return okAsync(match);
     });

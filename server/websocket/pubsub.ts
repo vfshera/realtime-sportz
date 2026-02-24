@@ -125,6 +125,31 @@ class MatchPubSub {
     }
   }
 
+  broadcastToAll(message: ServerMessage) {
+    if (this.#sockets.size === 0) {
+      log.warn({
+        source: "pubsub",
+        action: "broadcastToAll",
+        status: "no_connected_clients",
+      });
+
+      return;
+    }
+
+    for (const client of this.#sockets) {
+      if (client.readyState === WebSocket.OPEN) {
+        sendMessage(client, message);
+      }
+    }
+
+    log.info({
+      source: "pubsub",
+      action: "broadcastToAll",
+      status: "success",
+      clientCount: this.#sockets.size,
+    });
+  }
+
   removeSocket(ws: NodeWSContext) {
     const subscriptions = ws.raw!.subscriptions;
 
