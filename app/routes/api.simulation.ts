@@ -2,6 +2,7 @@ import type { Route } from "./+types/api.simulation";
 import { data, useFetcher } from "react-router";
 import { simulation } from "~/.server/simulator";
 import type { ApiError, ApiSuccess } from "~/utils/api.server";
+import { log } from "$/server/logger";
 
 type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
 
@@ -30,7 +31,13 @@ export async function action({ request }: Route.ActionArgs) {
       return result.match(
         () => data<ApiSuccess<null>>({ ok: true, data: null }),
         (error) => {
-          console.error("Simulation start failed:", error);
+          log.error({
+            source: "api",
+            route: "/api/simulation",
+            action: "start",
+            error,
+          });
+
           return data<ApiError>(
             {
               ok: false,
@@ -47,6 +54,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     case "stop": {
       simulation.stop();
+
       return data<ApiSuccess<null>>({ ok: true, data: null });
     }
 
@@ -56,7 +64,13 @@ export async function action({ request }: Route.ActionArgs) {
       return result.match(
         () => data<ApiSuccess<null>>({ ok: true, data: null }),
         (error) => {
-          console.error("Simulation restart failed:", error);
+          log.error({
+            source: "api",
+            route: "/api/simulation",
+            action: "restart",
+            error,
+          });
+
           return data<ApiError>(
             {
               ok: false,
@@ -77,6 +91,7 @@ export async function action({ request }: Route.ActionArgs) {
       if (speed > 0) {
         simulation.setSpeed(speed);
       }
+
       return data<ApiSuccess<null>>({ ok: true, data: null });
     }
 
