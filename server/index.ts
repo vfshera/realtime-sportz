@@ -22,7 +22,7 @@ import { secureHeaders } from "hono/secure-headers";
 import type { WSEvents } from "hono/ws";
 import { createHonoServer } from "react-router-hono-server/node";
 
-const server = await createHonoServer<AppBindings>({
+const app = await createHonoServer<AppBindings>({
   defaultLogger: false,
   useWebSocket: true,
   beforeAll(server) {
@@ -82,4 +82,4 @@ closeWithGrace({ delay: 5000 }, async ({ signal, err }) => {
   log.info({ source: "server", action: "shutdown", status: "complete" });
 });
 
-export default server;
+export default app;
