@@ -340,6 +340,52 @@ Lefthook runs on pre-commit:
 
 Always ensure linting passes before committing.
 
+### Commit Conventions
+
+Always use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Build process or auxiliary tool changes
+
+**Scopes** (common):
+
+- `api`: API routes
+- `ui`: User interface components
+- `db`: Database related
+- `simulator`: Match simulation logic
+- `websocket`: WebSocket functionality
+
+**Examples:**
+
+```bash
+feat(api): add simulation restart endpoint
+fix(ui): correct match status toggle logic
+refactor(simulator): extract match creation to separate method
+docs: update AGENTS.md with commit conventions
+```
+
+This ensures:
+
+- Automated changelog generation
+- Semantic versioning
+- Clear commit history
+
 ## Service Layer Architecture
 
 ### Overview
