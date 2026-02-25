@@ -1,5 +1,6 @@
 import type { Route } from "./+types/api.commentary";
-import type { NewCommentary } from "~/.server/db/schema/commentary";
+import { useFetcher } from "react-router";
+import type { Commentary, NewCommentary } from "~/.server/db/schema/commentary";
 import { commentaryService } from "~/.server/services";
 import {
   methodNotAllowed,
@@ -55,6 +56,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
 
+  const matchId = url.searchParams.get("matchId");
+
+  if (matchId) {
+    const result = await commentaryService.findByMatchId(matchId);
+
+    return resultToResponse(result, {
+      logging: {
+        log,
+        context: {
+          source: "api",
+          route: url.pathname,
+        },
+      },
+    });
+  }
+
   const result = await commentaryService.findAll();
 
   return resultToResponse(result, {
@@ -66,4 +83,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       },
     },
   });
+}
+
+export function useCommentaryFetcher() {
+  const fetcher = useFetcher<Awaited<ReturnType<typeof loader>>>();
+
+  return {
+    ...fetcher,
+    load: (matchId?: string) => {
+      let loadPath = "/api/commentary";
+
+      if (matchId) {
+        loadPath += `?matchId=${matchId}`;
+      }
+
+      return fetcher.load(loadPath);
+    },
+  };
 }
