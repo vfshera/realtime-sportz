@@ -19,9 +19,15 @@ export class MatchService {
     });
   }
 
-  findById(id: string): ResultAsync<Match, ServiceError> {
+  findById(
+    id: string,
+    withCommentaries?: boolean,
+  ): ResultAsync<Match, ServiceError> {
     return ResultAsync.fromPromise(
-      db.query.matches.findFirst({ where: eq(matches.id, id) }),
+      db.query.matches.findFirst({
+        where: eq(matches.id, id),
+        with: withCommentaries ? { commentaries: true } : undefined,
+      }),
       (e) => databaseError(e instanceof Error ? e.message : String(e)),
     ).andThen((match) =>
       match ? okAsync(match) : errAsync(notFound("Match", id)),

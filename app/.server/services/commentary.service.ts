@@ -32,7 +32,10 @@ export class CommentaryService {
 
   findByMatchId(matchId: string): ResultAsync<Commentary[], ServiceError> {
     return ResultAsync.fromPromise(
-      db.query.commentary.findMany({ where: eq(commentary.matchId, matchId) }),
+      db.query.commentary.findMany({
+        where: eq(commentary.matchId, matchId),
+        orderBy: (c, { asc }) => [asc(c.minute), asc(c.sequence)],
+      }),
       (e) => databaseError(e instanceof Error ? e.message : String(e)),
     );
   }

@@ -1,7 +1,8 @@
 import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
 import type { DefaultOmit } from "../types";
 import { primaryKeyCuid2, timestamps } from "../utils";
-import { sql } from "drizzle-orm";
+import commentary from "./commentary";
+import { relations, sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const matches = sqliteTable(
@@ -29,6 +30,10 @@ export const matches = sqliteTable(
     ),
   ],
 );
+
+export const matchRelations = relations(matches, ({ many }) => ({
+  commentaries: many(commentary),
+}));
 
 export type Match = typeof matches.$inferSelect;
 
