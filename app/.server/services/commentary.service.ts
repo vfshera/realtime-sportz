@@ -1,3 +1,4 @@
+import type { FindCommentaryOptions } from "~/validations/commentary";
 import { db } from "../db";
 import { commentary } from "../db/schema";
 import type { Commentary, NewCommentary } from "../db/schema/commentary";
@@ -30,11 +31,33 @@ export class CommentaryService {
     );
   }
 
-  findByMatchId(matchId: string): ResultAsync<Commentary[], ServiceError> {
+  findByMatchId(
+    matchId: string,
+    options?: FindCommentaryOptions,
+  ): ResultAsync<Commentary[], ServiceError> {
     return ResultAsync.fromPromise(
       db.query.commentary.findMany({
         where: eq(commentary.matchId, matchId),
-        orderBy: (c, { asc }) => [asc(c.minute), asc(c.sequence)],
+        orderBy: (t, { asc: ascOp, desc: descOp }) => {
+          const orderFn = options?.order === "asc" ? ascOp : descOp;
+
+          const sortFieldMap = {
+            createdAt: t.createdAt,
+            eventType: t.eventType,
+            sequence: t.sequence,
+            minute: t.minute,
+          } as const;
+
+          const sortField = options?.sortBy
+            ? sortFieldMap[options.sortBy]
+            : null;
+
+          if (sortField) {
+            return [orderFn(sortField)];
+          }
+
+          return [orderFn(t.minute)];
+        },
       }),
       (e) => databaseError(e instanceof Error ? e.message : String(e)),
     );

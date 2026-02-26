@@ -1,14 +1,18 @@
 import type { Route } from "./+types/api.commentary";
 import { useFetcher } from "react-router";
-import type { Commentary, NewCommentary } from "~/.server/db/schema/commentary";
-import { commentaryService } from "~/.server/services";
+import type { NewCommentary } from "~/.server/db/schema/commentary";
+import { commentaryService } from "~/.server/services/commentary.service";
 import {
   methodNotAllowed,
   requireJson,
   resultToResponse,
   validationError,
 } from "~/utils/api.server";
-import { createCommentarySchema } from "~/validations/commentary";
+import {
+  type FindCommentaryOptions,
+  createCommentarySchema,
+  findCommentaryOptionsSchema,
+} from "~/validations/commentary";
 import { appContext } from "$/server/context";
 import z from "zod";
 
@@ -59,7 +63,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const matchId = url.searchParams.get("matchId");
 
   if (matchId) {
-    const result = await commentaryService.findByMatchId(matchId);
+    const parseResult = findCommentaryOptionsSchema.safeParse({
+      sortBy: url.searchParams.get("sortBy") || undefined,
+      order: url.searchParams.get("order") || undefined,
+    });
+
+    const options: FindCommentaryOptions | undefined = parseResult.success
+      ? parseResult.data
+      : undefined;
+
+    const result = await commentaryService.findByMatchId(matchId, options);
 
     return resultToResponse(result, {
       logging: {
@@ -86,16 +99,30 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export function useCommentaryFetcher() {
-  const fetcher = useFetcher<Awaited<ReturnType<typeof loader>>>();
+  const fetcher = useFetcher<typeof loader>();
 
   return {
     ...fetcher,
-    load: (matchId?: string) => {
-      let loadPath = "/api/commentary";
+    load: (matchId?: string, options?: FindCommentaryOptions) => {
+      const params = new URLSearchParams();
 
       if (matchId) {
-        loadPath += `?matchId=${matchId}`;
+        params.set("matchId", matchId);
       }
+
+      if (options?.sortBy) {
+        params.set("sortBy", options.sortBy);
+      }
+
+      if (options?.order) {
+        params.set("order", options.order);
+      }
+
+      const queryString = params.toString();
+
+      const loadPath = queryString
+        ? `/api/commentary?${queryString}`
+        : "/api/commentary";
 
       return fetcher.load(loadPath);
     },
