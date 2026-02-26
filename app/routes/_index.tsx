@@ -13,7 +13,10 @@ import { WebSocketProvider, useWebSocketContext } from "~/providers";
 import { getTodayUtcRange } from "~/utils/date";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
-import { useSimulationFetcher } from "./api.simulation";
+import {
+  type SimulationActionIntent,
+  useSimulationFetcher,
+} from "./api.simulation";
 import { appContext } from "$/server/context";
 import { ClientOnly } from "remix-utils/client-only";
 
@@ -30,6 +33,9 @@ export async function loader({ context }: Route.LoaderArgs) {
         gte(m.startTime, new Date(startOfToday)),
         lt(m.startTime, new Date(endOfToday)),
       ),
+    with: {
+      commentaries: true,
+    },
   });
 
   return {
@@ -52,9 +58,8 @@ export default function Index({ matches, loaderData }: Route.ComponentProps) {
 }
 
 function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
-  const [matches, setMatches] = useState<MatchWithCommentaries[]>(
-    todaysMatches.map((m) => ({ ...m, commentaries: [] })),
-  );
+  const [matches, setMatches] =
+    useState<MatchWithCommentaries[]>(todaysMatches);
 
   const [commentaries, setCommentaries] = useState<Commentary[] | null>(null);
 
@@ -68,6 +73,12 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
     useState<MatchWithCommentaries | null>(null);
 
   const simulationFetcher = useSimulationFetcher();
+
+  function handleSimulationSubmit(intent: SimulationActionIntent) {
+    setMatches([]);
+    setSelectedMatch(null);
+    simulationFetcher.submit(intent);
+  }
 
   const { subscribe, isConnected, on } = useWebSocketContext();
 
@@ -142,6 +153,19 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
     [selectedMatch, subscribe],
   );
 
+  const getMatchButtonLabel = useCallback(
+    (match: MatchWithCommentaries) => {
+      const isSelected = selectedMatch?.id === match.id;
+
+      if (match.status === "finished") {
+        return isSelected ? "Viewing Recap" : "View Recap";
+      }
+
+      return isSelected ? "Watching Live" : "Watch Live";
+    },
+    [selectedMatch],
+  );
+
   return (
     <main className="mx-auto w-full max-w-300 pt-8">
       <header className="bg-yellow border-dark animate-slide-down rounded-2xl border-3 border-b-4 px-5 py-7 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
@@ -175,7 +199,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
 
             <Button
               variant="primary"
-              onClick={() => simulationFetcher.submit("restart")}
+              onClick={() => handleSimulationSubmit("restart")}
             >
               Start New Matches
             </Button>
@@ -192,7 +216,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
 
             <Button
               variant="primary"
-              onClick={() => simulationFetcher.submit("start")}
+              onClick={() => handleSimulationSubmit("start")}
             >
               Start Simulation
             </Button>
@@ -258,9 +282,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
                             handleSelectMatch(match);
                           }}
                         >
-                          {match.status === "finished"
-                            ? "View Recap"
-                            : "Watch Live"}
+                          {getMatchButtonLabel(match)}
                         </Button>
                         {selectedMatch?.id === match.id && (
                           <Button

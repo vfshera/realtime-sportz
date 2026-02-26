@@ -6,7 +6,8 @@ export type ButtonProps = ComponentProps<"button"> & {
 };
 
 const VARIANT_CLASSES: Record<ButtonProps["variant"], string> = {
-  primary: "bg-yellow text-dark hover:bg-dark hover:text-yellow ",
+  primary:
+    "bg-yellow text-dark hover:bg-dark hover:text-yellow disabled:bg-gray-400 disabled:text-white/50 disabled:cursor-not-allowed",
   secondary: "bg-white text-dark hover:bg-dark hover:text-white",
 };
 

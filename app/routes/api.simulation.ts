@@ -4,7 +4,7 @@ import { simulation } from "~/.server/simulator";
 import type { ApiError, ApiSuccess } from "~/utils/api.server";
 import { appContext } from "$/server/context";
 
-type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
+export type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
