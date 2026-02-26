@@ -140,7 +140,7 @@ export class MatchSimulator {
       team: event.team,
       actor: event.actor,
       message: event.message,
-      tags: event.tags ? JSON.stringify(event.tags) : null,
+      tags: event.tags ? event.tags.join(",") : null,
       metadata: event.scoreDelta ?? {},
     });
 

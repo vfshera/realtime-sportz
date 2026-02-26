@@ -195,6 +195,31 @@ import type { Route } from "./+types/my-route";
 // Route.ErrorBoundaryProps, Route.MetaArgs, Route.ClientLoaderArgs
 ```
 
+### Deriving Types for Components
+
+Components can import route types to derive types from loader data. This ensures type safety across the app:
+
+```typescript
+// In components/MatchCard.tsx
+import type { Route } from "../routes/+types/_index";
+
+// Derive single match type from loader's array
+type MatchWithCommentaries =
+  Route.ComponentProps["loaderData"]["todaysMatches"][number];
+```
+
+**How it works:**
+
+- React Router's typegen creates `Route` type in `.react-router/types/routes/+types/_index.ts`
+- `tsconfig.json` includes `".react-router/types/**/*"` and uses `rootDirs: [".", "./.react-router/types"]`
+- This allows imports like `../routes/+types/_index` to resolve to generated types
+
+**Benefits:**
+
+- Types stay in sync when loader changes
+- Single source of truth in route file
+- Components get exact types without duplication
+
 ### Route Module Exports
 
 | Export          | Purpose                    | Runs On |
