@@ -236,4 +236,4 @@ bun run format            # Prettier formatting
 
 ## License
 
-MIT
+[MIT](https://github.com/vfshera/realtime-sportz/blob/main/LICENSE)
