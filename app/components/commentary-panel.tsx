@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Commentary } from "~/.server/db/schema";
 import type { MatchWithCommentaries } from "~/types";
 import { collectTeams } from "~/utils/match";
+import { cn } from "~/utils/styling";
 import Button from "./ui/button";
 
 export interface CommentaryPanelProps {
@@ -20,39 +21,43 @@ export function CommentaryPanel({
   }, [commentaries]);
 
   return (
-    <div className="commentary-panel animate-slide-left bg-blue border-dark sticky top-10 flex max-h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border-3 p-6 shadow-[8px_8px_0_rgba(0,0,0,0.1)] max-[1200px]:relative max-[1200px]:top-0 max-[1200px]:max-h-150">
-      <div className="mb-5 flex items-baseline justify-between">
-        <h3 className="text-2xl font-bold -tracking-[1px]">Live Commentary</h3>
-        {selectedMatch.status === "live" && (
-          <div className="live-badge bg-dark text-yellow flex items-center gap-2 rounded-[20px] px-3.5 py-1.5 text-xs font-bold">
-            <div className="pulse bg-yellow size-2 animate-pulse rounded-full"></div>
-            Real-time
-          </div>
-        )}
-      </div>
-
-      <div className="match-info-box border-dark mb-5 rounded-xl border-2 bg-white p-4">
-        <div className="match-info-sport text-text-secondary mb-1 text-[11px] font-bold tracking-[0.5px] uppercase">
-          {selectedMatch.sport}
+    <div className="commentary-panel animate-slide-left border-dark sticky top-10 flex max-h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border-3 bg-white pb-6 shadow-[8px_8px_0_rgba(0,0,0,0.1)] max-[1200px]:relative max-[1200px]:top-0 max-[1200px]:max-h-150">
+      <div className="bg-blue border-dark space-y-4 border-b-2 p-6 pb-4">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-2xl font-bold -tracking-[1px]">
+            Live Commentary
+          </h3>
+          {selectedMatch.status === "live" && (
+            <div className="live-badge bg-dark text-yellow flex items-center gap-2 rounded-[20px] px-3.5 py-1.5 text-xs font-bold">
+              <div className="pulse bg-yellow size-2 animate-pulse rounded-full"></div>
+              Real-time
+            </div>
+          )}
         </div>
-        <div className="match-info-teams text-sm font-semibold">
-          {collectTeams(selectedMatch)
-            .map((t) => t.name)
-            .join(" vs ")}
+
+        <div className="match-info-box border-dark rounded-xl border bg-white px-4 py-2.5">
+          <div className="match-info-sport text-text-secondary mb-1 text-[11px] font-bold tracking-[0.5px] uppercase">
+            {selectedMatch.sport}
+          </div>
+          <div className="match-info-teams text-sm font-semibold">
+            {collectTeams(selectedMatch)
+              .map((t) => t.name)
+              .join(" vs ")}
+          </div>
         </div>
       </div>
 
       {!!commentaries && (
-        <div className="commentary-feed flex-1 overflow-y-auto pr-2">
-          <div className="relative">
-            <div className="absolute top-0 bottom-0 left-[5px] w-[2px] bg-[#e0e0e0]" />
+        <div className="commentary-feed mt-2 mr-2 flex-1 overflow-y-auto bg-white p-6">
+          <div className="space-y-6">
             {commentaries.map((item, index) => (
               <div
                 key={item.id}
-                className="commentary-item animate-slide-in-comment relative mb-6 pl-6"
+                className="commentary-item animate-slide-in-comment relative pl-6"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="bg-dark absolute top-1.5 left-0 size-3 rounded-full border-2 border-white shadow-sm" />
+                <div className="absolute top-5 bottom-0 left-[5px] w-[1.5px] bg-linear-to-b from-[#e0e0e0] to-transparent" />
+                <div className="bg-yellow border-dark absolute top-1.5 left-0 size-2.5 rounded-full border shadow-sm shadow-white" />
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="font-space-mono text-text-secondary text-xs font-bold">
                     {new Date(item.createdAt).toLocaleTimeString("en-US", {
@@ -62,23 +67,21 @@ export function CommentaryPanel({
                       hour12: true,
                     })}
                   </span>
-                  {item.minute && (
-                    <span className="text-text-secondary text-[11px] font-semibold">
-                      {item.minute}'
-                    </span>
-                  )}
-                  {item.sequence && (
-                    <span className="text-text-secondary text-[11px] font-semibold">
-                      Seq {item.sequence}
-                    </span>
-                  )}
-                  {item.period && (
-                    <span className="text-text-secondary text-[11px] font-semibold capitalize">
-                      {item.period}
-                    </span>
-                  )}
+
+                  {[`${item.minute}'`, `Seq ${item.sequence}`, item.period]
+                    .filter(Boolean)
+                    .map((text, i) => (
+                      <span
+                        className={cn(
+                          "text-text-secondary rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+                          i == 2 && "capitalize",
+                        )}
+                      >
+                        {text}
+                      </span>
+                    ))}
                   {item.eventType && (
-                    <span className="bg-yellow text-dark rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+                    <span className="bg-yellow text-dark border-dark rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
                       {item.eventType}
                     </span>
                   )}
@@ -90,15 +93,15 @@ export function CommentaryPanel({
                     {item.team}
                   </div>
                 )}
-                <div className="mb-2 rounded-xl border border-[#e8e8e8] bg-[#f8f8f8] p-3">
-                  <p className="text-text text-sm leading-normal">
+                <div className="mb-2 rounded-xl rounded-tl-none border border-[#e8e8e8] bg-[#f8f8f8] p-3">
+                  <p className="text-text text-sm leading-normal font-semibold">
                     {item.message}
                   </p>
                 </div>
                 {item.tags && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="mt-1 flex flex-wrap gap-2">
                     {item.tags.split(",").map((tag) => (
-                      <span className="text-text-secondary mt-1 block text-[11px] font-semibold tracking-[0.5px] uppercase">
+                      <span className="text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px] uppercase">
                         {tag}
                       </span>
                     ))}
