@@ -76,6 +76,7 @@ export default function MatchCard({
           <Button
             variant="primary"
             disabled={match.status === "scheduled"}
+            className={cn(isSelected && "bg-blue")}
             onClick={() => {
               handleSelect(match);
             }}
