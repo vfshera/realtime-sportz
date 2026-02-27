@@ -20,7 +20,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "border-dark font-manrope cursor-pointer rounded-lg border-2 px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5",
+        "border-dark font-manrope cursor-pointer rounded-full border-2 px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5",
         VARIANT_CLASSES[variant],
         className,
       )}
