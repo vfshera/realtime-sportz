@@ -133,7 +133,7 @@ export class MatchSimulator {
   private async executeEvent(event: CommentaryEvent): Promise<void> {
     const result = await commentaryService.create({
       matchId: this.#matchId,
-      minute: event.minute,
+      elapsedTime: Math.floor(event.minute * 60),
       sequence: event.sequence,
       period: event.period,
       eventType: event.eventType,

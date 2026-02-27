@@ -17,7 +17,7 @@ export function CommentaryPanel({
   getFullFeed,
 }: CommentaryPanelProps) {
   const hasFirstCommentary = useMemo(() => {
-    return Boolean(commentaries.find((c) => c.minute === 0));
+    return Boolean(commentaries.find((c) => c.elapsedTime === 0));
   }, [commentaries]);
 
   return (
@@ -68,10 +68,15 @@ export function CommentaryPanel({
                     })}
                   </span>
 
-                  {[`${item.minute}'`, `Seq ${item.sequence}`, item.period]
+                  {[
+                    `${Math.floor(item.elapsedTime / 60)}'`,
+                    `Seq ${item.sequence}`,
+                    item.period,
+                  ]
                     .filter(Boolean)
                     .map((text, i) => (
                       <span
+                        key={i}
                         className={cn(
                           "text-text-secondary rounded-full border px-2 py-0.5 text-[11px] font-semibold",
                           i == 2 && "capitalize",
@@ -101,7 +106,10 @@ export function CommentaryPanel({
                 {item.tags && (
                   <div className="mt-1 flex flex-wrap gap-2">
                     {item.tags.split(",").map((tag) => (
-                      <span className="text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px] uppercase">
+                      <span
+                        key={tag}
+                        className="text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px] uppercase"
+                      >
                         {tag}
                       </span>
                     ))}

@@ -42,7 +42,7 @@ export const matchFinishedPayloadSchema = matchPayloadSchema.pick({
 export const commentaryPayloadSchema = z.object({
   id: z.string().min(1),
   matchId: z.string().min(1),
-  minute: z.number().int().nonnegative(),
+  elapsedTime: z.number().int().nonnegative(),
   sequence: z.number().int().nonnegative(),
   period: nullableText,
   eventType: z.string(),

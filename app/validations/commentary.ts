@@ -8,14 +8,16 @@ export const updateCommentarySchema = createCommentarySchema.partial();
 
 export const fullUpdateCommentarySchema = createCommentarySchema.required({
   matchId: true,
-  minute: true,
+  elapsedTime: true,
   sequence: true,
   eventType: true,
   message: true,
 });
 
 export const findCommentaryOptionsSchema = z.object({
-  sortBy: z.enum(["minute", "sequence", "createdAt", "eventType"]).optional(),
+  sortBy: z
+    .enum(["elapsedTime", "sequence", "createdAt", "eventType"])
+    .optional(),
   order: z.enum(["asc", "desc"]).optional(),
 });
 

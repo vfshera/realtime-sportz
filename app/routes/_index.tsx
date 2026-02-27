@@ -34,7 +34,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       ),
     with: {
       commentaries: {
-        orderBy: (c, { desc }) => [desc(c.minute)],
+        orderBy: (c, { desc }) => [desc(c.elapsedTime)],
       },
     },
   });

@@ -11,7 +11,7 @@ export const commentary = sqliteTable(
     matchId: text("match_id")
       .notNull()
       .references(() => matches.id, { onDelete: "cascade" }),
-    minute: integer("minute").notNull(),
+    elapsedTime: integer("elapsed_time").notNull(), // elapsed time in seconds
     sequence: integer("sequence").notNull(),
     period: text("period"),
     eventType: text("event_type").notNull(),
@@ -26,7 +26,11 @@ export const commentary = sqliteTable(
     ...timestamps,
   },
   (t) => [
-    index("commentary_match_timeline_idx").on(t.matchId, t.minute, t.sequence),
+    index("commentary_match_timeline_idx").on(
+      t.matchId,
+      t.elapsedTime,
+      t.sequence,
+    ),
   ],
 );
 

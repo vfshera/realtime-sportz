@@ -45,7 +45,7 @@ export class CommentaryService {
             createdAt: t.createdAt,
             eventType: t.eventType,
             sequence: t.sequence,
-            minute: t.minute,
+            elapsedTime: t.elapsedTime,
           } as const;
 
           const sortField = options?.sortBy
@@ -56,7 +56,7 @@ export class CommentaryService {
             return [orderFn(sortField)];
           }
 
-          return [orderFn(t.minute)];
+          return [orderFn(t.elapsedTime)];
         },
       }),
       (e) => databaseError(e instanceof Error ? e.message : String(e)),
