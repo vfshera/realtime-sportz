@@ -3,18 +3,15 @@ import type { Commentary } from "~/.server/db/schema";
 import type { MatchWithCommentaries } from "~/types";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
-import Button from "./ui/button";
 
 export interface CommentaryPanelProps {
   selectedMatch: MatchWithCommentaries;
   commentaries: Commentary[];
-  getFullFeed: () => void;
 }
 
 export function CommentaryPanel({
   selectedMatch,
   commentaries,
-  getFullFeed,
 }: CommentaryPanelProps) {
   const hasFirstCommentary = useMemo(() => {
     return Boolean(commentaries.find((c) => c.elapsedTime === 0));
@@ -119,10 +116,10 @@ export function CommentaryPanel({
             ))}
           </div>
           {!hasFirstCommentary && (
-            <div className="mt-2 flex w-full justify-center py-3">
-              <Button variant="secondary" onClick={getFullFeed}>
-                Get Full Feed
-              </Button>
+            <div className="mt-2 pt-3">
+              <p className="text-text-secondary animate-pulse text-center">
+                ... loading full feed ...
+              </p>
             </div>
           )}
         </div>

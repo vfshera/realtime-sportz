@@ -12,6 +12,7 @@ import { WebSocketProvider, useWebSocketContext } from "~/providers";
 import type { MatchWithCommentaries } from "~/types";
 import { mergeCommentaries } from "~/utils/commentary";
 import { getTodayUtcRange } from "~/utils/date";
+import { latestMatchSort } from "~/utils/match";
 import { cn } from "~/utils/styling";
 import { useCommentaryFetcher } from "./api.commentary";
 import {
@@ -63,6 +64,11 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
     useState<MatchWithCommentaries[]>(todaysMatches);
 
   const hasMatches = matches.length > 0;
+
+  const sortedMatches = useMemo(
+    () => [...matches].sort(latestMatchSort),
+    [matches],
+  );
 
   const allMatchesFinished = useMemo(() => {
     return matches.every((m) => m.status === "finished") && matches.length > 0;
@@ -252,7 +258,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
             </div>
 
             <div className="grid gap-5 xl:grid-cols-2">
-              {matches.map((match, i) => (
+              {sortedMatches.map((match, i) => (
                 <MatchCard
                   key={match.id}
                   match={match}
@@ -269,7 +275,6 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
               <CommentaryPanel
                 selectedMatch={selectedMatch}
                 commentaries={commentaries}
-                getFullFeed={() => commentaryFetcher.load(selectedMatch.id)}
               />
             ) : (
               <EmptyCommentaryPanel />
