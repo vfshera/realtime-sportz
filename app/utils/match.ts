@@ -52,12 +52,24 @@ export async function syncMatchStatus(
 
 /**
  * Given a match, returns an array of two objects containing the home team name and score, and the away team name and score.
- * @param {Match} match - The match object.
- * @returns {Array<{name: string, score: number}>} - An array of two objects containing the team name and score for both home and away teams.
+ * @param  match - The match object.
+ * @returns teams  - An array of two objects containing the team name and score for both home and away teams.
  */
 export function collectTeams(match: Match) {
   return [
     { name: match.homeTeam, score: match.homeScore },
     { name: match.awayTeam, score: match.awayScore },
   ];
+}
+
+/**
+ *
+ * Sorts by latest match based on startTime
+ *
+ * @param a
+ * @param z
+ * @returns
+ */
+export function latestMatchSort<T extends Match = Match>(a: T, z: T): number {
+  return z.startTime.getTime() - a.startTime.getTime();
 }
