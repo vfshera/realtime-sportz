@@ -70,7 +70,11 @@ export default function MatchCard({
       </div>
       <div className="mt5 flex items-center justify-between border-t-2 border-[#f0f0f0] pt-5">
         <div className="match-time text-text-secondary font-space-mono text-[13px] font-semibold">
-          {match.startTime.toLocaleTimeString()}
+          {match.startTime.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })}
         </div>
         <div className="match-actions flex gap-3">
           <Button
