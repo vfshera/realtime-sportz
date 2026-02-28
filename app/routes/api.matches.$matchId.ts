@@ -98,10 +98,14 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       });
     }
 
-    const result = await matchService.update(
-      params.matchId,
-      res.data as Partial<NewMatch>,
-    );
+    const isFinishing = res.data.status === "finished";
+
+    const result = isFinishing
+      ? await matchService.finish(params.matchId)
+      : await matchService.update(
+          params.matchId,
+          res.data as Partial<NewMatch>,
+        );
 
     return resultToResponse(result, {
       logging: {
@@ -109,7 +113,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         context: {
           source: "api",
           route: url.pathname,
-          action: "update",
+          action: isFinishing ? "finish" : "update",
           method: request.method,
           matchId: params.matchId,
         },
