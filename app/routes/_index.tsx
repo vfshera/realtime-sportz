@@ -20,6 +20,7 @@ import {
   useSimulationFetcher,
 } from "./api.simulation";
 import { appContext } from "$/server/context";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ClientOnly } from "remix-utils/client-only";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -45,7 +46,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-export default function Index({ matches, loaderData }: Route.ComponentProps) {
+export default function Component({
+  matches,
+  loaderData,
+}: Route.ComponentProps) {
   const { clientEnv } = matches[0].loaderData;
 
   return (
@@ -69,6 +73,8 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
     () => [...matches].sort(latestMatchSort),
     [matches],
   );
+
+  const [matchGridRef] = useAutoAnimate({ duration: 500 });
 
   const allMatchesFinished = useMemo(() => {
     return matches.every((m) => m.status === "finished") && matches.length > 0;
@@ -140,9 +146,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
       ({ id: finishedId, ...finishedMatch }) => {
         setMatches((prev) => {
           return prev.map((m) =>
-            m.id === finishedId
-              ? { ...m, ...finishedMatch, status: "finished" }
-              : m,
+            m.id === finishedId ? { ...m, ...finishedMatch } : m,
           );
         });
       },
@@ -257,14 +261,13 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
               </div>
             </div>
 
-            <div className="grid gap-5 xl:grid-cols-2">
-              {sortedMatches.map((match, i) => (
+            <div ref={matchGridRef} className="grid gap-5 xl:grid-cols-2">
+              {sortedMatches.map((match) => (
                 <MatchCard
                   key={match.id}
                   match={match}
                   isSelected={selectedMatch?.id === match.id}
                   handleSelect={handleSelectMatch}
-                  index={i}
                 />
               ))}
             </div>

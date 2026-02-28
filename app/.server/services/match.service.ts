@@ -49,7 +49,15 @@ export class MatchService {
         db.update(matches).set(data).where(eq(matches.id, id)).returning(),
         (e) => databaseError(e instanceof Error ? e.message : String(e)),
       ).andThen(([match]) => {
-        pubsub.broadcast(id, { type: "match.updated", payload: match });
+        pubsub.broadcastToAll({
+          type: "match.updated",
+          payload: {
+            id: match.id,
+            status: match.status,
+            homeScore: match.homeScore,
+            awayScore: match.awayScore,
+          },
+        });
 
         return okAsync(match);
       }),
@@ -72,7 +80,15 @@ export class MatchService {
           .returning(),
         (e) => databaseError(e instanceof Error ? e.message : String(e)),
       ).andThen(([match]) => {
-        pubsub.broadcast(id, { type: "match.updated", payload: match });
+        pubsub.broadcastToAll({
+          type: "match.updated",
+          payload: {
+            id: match.id,
+            status: match.status,
+            homeScore: match.homeScore,
+            awayScore: match.awayScore,
+          },
+        });
 
         return okAsync(match);
       }),
@@ -92,7 +108,15 @@ export class MatchService {
           .returning(),
         (e) => databaseError(e instanceof Error ? e.message : String(e)),
       ).andThen(([match]) => {
-        pubsub.broadcast(id, { type: "match.updated", payload: match });
+        pubsub.broadcastToAll({
+          type: "match.updated",
+          payload: {
+            id: match.id,
+            status: match.status,
+            homeScore: match.homeScore,
+            awayScore: match.awayScore,
+          },
+        });
 
         return okAsync(match);
       }),
@@ -101,7 +125,15 @@ export class MatchService {
 
   finish(id: string): ResultAsync<Match, ServiceError> {
     return this.updateStatus(id, "finished").andThen((match) => {
-      pubsub.broadcast(id, { type: "match.finished", payload: match });
+      pubsub.broadcastToAll({
+        type: "match.finished",
+        payload: {
+          id: match.id,
+          status: match.status,
+          homeScore: match.homeScore,
+          awayScore: match.awayScore,
+        },
+      });
 
       return okAsync(match);
     });

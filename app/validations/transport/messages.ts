@@ -33,11 +33,7 @@ export const matchUpdatedPayloadSchema = matchPayloadSchema.pick({
   awayScore: true,
 });
 
-export const matchFinishedPayloadSchema = matchPayloadSchema.pick({
-  id: true,
-  homeScore: true,
-  awayScore: true,
-});
+export const matchFinishedPayloadSchema = matchUpdatedPayloadSchema;
 
 export const commentaryPayloadSchema = z.object({
   id: z.string().min(1),
