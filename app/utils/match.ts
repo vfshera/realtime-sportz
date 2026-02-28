@@ -62,14 +62,38 @@ export function collectTeams(match: Match) {
   ];
 }
 
+const statusOrder: Record<MatchStatus, number> = {
+  live: 0,
+  scheduled: 1,
+  finished: 2,
+};
+
 /**
+ * Sorts matches with the following priority:
+ * 1. Primary: Status (live → scheduled → finished)
+ * 2. Secondary: Start time or end time depending on status:
+ *    - live: Start time descending (most recent first)
+ *    - scheduled: Start time ascending (earliest first)
+ *    - finished: End time descending (most recently finished first)
  *
- * Sorts by latest match based on startTime
- *
- * @param a
- * @param z
- * @returns
+ * @param a - First match to compare
+ * @param z - Second match to compare
+ * @returns Negative if a should come before z
  */
 export function latestMatchSort<T extends Match = Match>(a: T, z: T): number {
-  return z.startTime.getTime() - a.startTime.getTime();
+  const sameStatus = a.status === z.status;
+
+  if (a.status === "finished" && sameStatus) {
+    return z.endTime.getTime() - a.endTime.getTime();
+  }
+
+  if (a.status === "live" && sameStatus) {
+    return z.startTime.getTime() - a.startTime.getTime();
+  }
+
+  if (a.status === "scheduled" && sameStatus) {
+    return a.startTime.getTime() - z.startTime.getTime();
+  }
+
+  return statusOrder[a.status] - statusOrder[z.status];
 }
