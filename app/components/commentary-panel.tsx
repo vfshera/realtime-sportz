@@ -3,6 +3,7 @@ import type { Commentary } from "~/.server/db/schema";
 import type { MatchWithCommentaries } from "~/types";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export interface CommentaryPanelProps {
   selectedMatch: MatchWithCommentaries;
@@ -16,6 +17,8 @@ export function CommentaryPanel({
   const hasFirstCommentary = useMemo(() => {
     return Boolean(commentaries.find((c) => c.elapsedTime === 0));
   }, [commentaries]);
+
+  const [listParent] = useAutoAnimate({ duration: 400 });
 
   return (
     <div className="commentary-panel animate-slide-left border-dark sticky top-10 flex max-h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border-3 bg-white pb-6 shadow-[8px_8px_0_rgba(0,0,0,0.1)] max-[1200px]:relative max-[1200px]:top-0 max-[1200px]:max-h-150">
@@ -46,13 +49,9 @@ export function CommentaryPanel({
 
       {!!commentaries && (
         <div className="commentary-feed mt-2 mr-2 flex-1 overflow-y-auto bg-white p-6">
-          <div className="space-y-6">
-            {commentaries.map((item, index) => (
-              <div
-                key={item.id}
-                className="commentary-item animate-slide-in-comment relative pl-6"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
+          <div ref={listParent} className="space-y-6">
+            {commentaries.map((item) => (
+              <div key={item.id} className="commentary-item relative pl-6">
                 <div className="absolute top-5 bottom-0 left-[5px] w-[1.5px] bg-linear-to-b from-[#e0e0e0] to-transparent" />
                 <div className="bg-yellow border-dark absolute top-1.5 left-0 size-2.5 rounded-full border shadow-sm shadow-white" />
                 <div className="mb-2 flex flex-wrap items-center gap-2">

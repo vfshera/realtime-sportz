@@ -43,6 +43,7 @@ function useProvideWebSocket(url: string) {
         }
 
         const msg = result.data;
+
         emit(msg.type, msg.payload);
       } catch {
         console.error("Bad WS message", event.data);

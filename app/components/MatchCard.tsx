@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Button from "~/components/ui/button";
 import type { MatchWithCommentaries } from "~/types";
 import { collectTeams } from "~/utils/match";
@@ -8,14 +7,12 @@ type MatchCardProps = {
   match: MatchWithCommentaries;
   isSelected: boolean;
   handleSelect: (match: MatchWithCommentaries | null) => void;
-  index: number;
 };
 
 export default function MatchCard({
   match,
   isSelected,
   handleSelect,
-  index,
 }: MatchCardProps) {
   const teams = collectTeams(match);
 
@@ -30,10 +27,7 @@ export default function MatchCard({
   const isLive = match.status === "live";
 
   return (
-    <div
-      className="match-card animate-slide-up border-dark rounded-2xl border-3 bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] transition-all delay-(--delay,0.1s) duration-300 ease-linear hover:-translate-y-1 hover:shadow-[12px_12px_0_rgba(0,0,0,0.15)] md:p-6"
-      style={{ "--delay": `${index * 0.1}s` } as CSSProperties}
-    >
+    <div className="match-card border-dark rounded-2xl border-3 bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_rgba(0,0,0,0.15)] md:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div className="sport-tag border-dark rounded-[20px] border-2 bg-white px-3 py-1 text-[11px] font-bold tracking-[0.5px] uppercase">
           {match.sport}
