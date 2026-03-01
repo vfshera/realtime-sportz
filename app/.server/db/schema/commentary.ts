@@ -1,8 +1,8 @@
-import type { DefaultOmit } from "../types";
-import { primaryKeyCuid2, timestamps } from "../utils";
-import { matches } from "./matches";
 import { relations, sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { primaryKeyCuid2, timestamps } from "../utils";
+import { matches } from "./matches";
+import type { DefaultOmit } from "../types";
 
 export const commentary = sqliteTable(
   "commentary",

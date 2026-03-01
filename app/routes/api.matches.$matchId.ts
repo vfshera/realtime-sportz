@@ -1,4 +1,10 @@
 import type { Route } from "./+types/api.matches.$matchId";
+import { appContext } from "$/server/context";
+import z from "zod";
+import {
+  fullUpdateMatchSchema,
+  updateMatchSchema,
+} from "~/validations/matches";
 import type { NewMatch } from "~/.server/db/schema/matches";
 import { matchService } from "~/.server/services";
 import {
@@ -7,12 +13,6 @@ import {
   resultToResponse,
   validationError,
 } from "~/utils/api.server";
-import {
-  fullUpdateMatchSchema,
-  updateMatchSchema,
-} from "~/validations/matches";
-import { appContext } from "$/server/context";
-import z from "zod";
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const { log } = context.get(appContext);

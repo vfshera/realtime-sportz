@@ -1,11 +1,11 @@
-import type { MatchStatus } from "~/utils/match";
-import { db } from "../db";
-import { matches } from "../db/schema";
-import type { Match, NewMatch } from "../db/schema/matches";
-import { type ServiceError, databaseError, notFound } from "./errors";
 import { pubsub } from "$/server/websocket/pubsub";
 import { eq, sql } from "drizzle-orm";
 import { ResultAsync, errAsync, okAsync } from "neverthrow";
+import { db } from "../db";
+import { matches } from "../db/schema";
+import { type ServiceError, databaseError, notFound } from "./errors";
+import type { Match, NewMatch } from "../db/schema/matches";
+import type { MatchStatus } from "~/utils/match";
 
 export class MatchService {
   create(data: NewMatch): ResultAsync<Match, ServiceError> {

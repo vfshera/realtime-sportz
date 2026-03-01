@@ -46,7 +46,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="font-manrope text-text min-h-full bg-linear-[135deg] from-[#f5f5f5] to-[#e8e8e8] leading-[1.6]">
+      <body className="min-h-full bg-linear-[135deg] from-[#f5f5f5] to-[#e8e8e8] font-manrope leading-[1.6] text-text">
         {children}
         {clientEnv && (
           <script

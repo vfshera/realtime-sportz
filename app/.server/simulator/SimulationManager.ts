@@ -1,10 +1,10 @@
-import { getMatches } from "~/data/loader.server";
+import { log } from "$/server/logger";
+import { ResultAsync, errAsync } from "neverthrow";
 import { getMatchStatus } from "~/utils/match";
+import { getMatches } from "~/data/loader.server";
 import { db } from "../db";
 import { commentary, matches } from "../db/schema";
 import { matchService } from "../services";
-import { MatchSimulator } from "./MatchSimulator";
-import { playerPoolManager } from "./PlayerPoolManager";
 import {
   DEFAULT_SPEED_MULTIPLIER,
   MATCH_CREATION_DELAY_MS,
@@ -16,9 +16,9 @@ import {
   dbClearFailed,
   matchesExist,
 } from "./errors";
+import { MatchSimulator } from "./MatchSimulator";
+import { playerPoolManager } from "./PlayerPoolManager";
 import type { ScorePrediction, SimulationStats } from "./types";
-import { log } from "$/server/logger";
-import { ResultAsync, errAsync } from "neverthrow";
 import { setTimeout as sleep } from "node:timers/promises";
 
 export class SimulationManager {

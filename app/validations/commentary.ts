@@ -1,6 +1,6 @@
-import commentary from "~/.server/db/schema/commentary";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import commentary from "~/.server/db/schema/commentary";
 
 export const createCommentarySchema = createInsertSchema(commentary);
 

@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 import { expand } from "dotenv-expand";
 import pc from "picocolors";
-import type { Simplify } from "type-fest";
 import * as z from "zod";
+import type { Simplify } from "type-fest";
 
 expand(config());
 

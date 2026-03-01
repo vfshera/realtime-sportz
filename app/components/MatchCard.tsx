@@ -1,7 +1,7 @@
 import Button from "~/components/ui/button";
-import type { MatchWithCommentaries } from "~/types";
 import { collectTeams } from "~/utils/match";
 import { cn } from "~/utils/styling";
+import type { MatchWithCommentaries } from "~/types";
 
 type MatchCardProps = {
   match: MatchWithCommentaries;
@@ -27,9 +27,9 @@ export default function MatchCard({
   const isLive = match.status === "live";
 
   return (
-    <div className="match-card border-dark rounded-2xl border-3 bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_rgba(0,0,0,0.15)] md:p-6">
+    <div className="match-card rounded-2xl border-3 border-dark bg-white p-5 shadow-[8px_8px_0_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_rgba(0,0,0,0.15)] md:p-6">
       <div className="mb-5 flex items-center justify-between">
-        <div className="sport-tag border-dark rounded-[20px] border-2 bg-white px-3 py-1 text-[11px] font-bold tracking-[0.5px] uppercase">
+        <div className="sport-tag rounded-[20px] border-2 border-dark bg-white px-3 py-1 text-[11px] font-bold tracking-[0.5px] uppercase">
           {match.sport}
         </div>
         <div
@@ -56,14 +56,14 @@ export default function MatchCard({
             <div className="team-name text-base font-bold -tracking-[0.5px] md:text-xl">
               {team.name}
             </div>
-            <div className="score font-space-mono border-dark min-w-15 rounded-xl border-2 bg-white px-5 py-1.5 text-center text-2xl font-extrabold max-md:px-4 md:min-w-20 md:py-2 md:text-[2rem]">
+            <div className="score min-w-15 rounded-xl border-2 border-dark bg-white px-5 py-1.5 text-center font-space-mono text-2xl font-extrabold max-md:px-4 md:min-w-20 md:py-2 md:text-[2rem]">
               {team.score}
             </div>
           </div>
         ))}
       </div>
       <div className="mt5 flex items-center justify-between border-t-2 border-[#f0f0f0] pt-5">
-        <div className="match-time text-text-secondary font-space-mono text-[13px] font-semibold">
+        <div className="match-time font-space-mono text-[13px] font-semibold text-text-secondary">
           {match.startTime.toLocaleTimeString(undefined, {
             hour: "2-digit",
             minute: "2-digit",

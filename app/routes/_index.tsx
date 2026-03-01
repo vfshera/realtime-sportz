@@ -1,27 +1,27 @@
 import type { Route } from "./+types/_index";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Commentary } from "~/.server/db/schema";
-import HomeSkeleton from "~/components/HomeSkeleton";
-import MatchCard from "~/components/MatchCard";
+import { appContext } from "$/server/context";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { ClientOnly } from "remix-utils/client-only";
 import {
   CommentaryPanel,
   EmptyCommentaryPanel,
 } from "~/components/commentary-panel";
+import HomeSkeleton from "~/components/HomeSkeleton";
+import MatchCard from "~/components/MatchCard";
 import Button from "~/components/ui/button";
 import { WebSocketProvider, useWebSocketContext } from "~/providers";
-import type { MatchWithCommentaries } from "~/types";
 import { mergeCommentaries } from "~/utils/commentary";
 import { getTodayUtcRange } from "~/utils/date";
 import { latestMatchSort } from "~/utils/match";
 import { cn } from "~/utils/styling";
+import type { Commentary } from "~/.server/db/schema";
 import { useCommentaryFetcher } from "./api.commentary";
 import {
   type SimulationActionIntent,
   useSimulationFetcher,
 } from "./api.simulation";
-import { appContext } from "$/server/context";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { ClientOnly } from "remix-utils/client-only";
+import type { MatchWithCommentaries } from "~/types";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { db } = context.get(appContext);
@@ -193,17 +193,17 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
 
   return (
     <main className="mx-auto w-full max-w-300 pt-8">
-      <header className="bg-yellow border-dark animate-slide-down rounded-2xl border-3 border-b-4 px-5 py-7 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+      <header className="animate-slide-down rounded-2xl border-3 border-b-4 border-dark bg-yellow px-5 py-7 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-dark text-[2rem] font-extrabold -tracking-[2px] md:text-4xl">
+            <h1 className="text-[2rem] font-extrabold -tracking-[2px] text-dark md:text-4xl">
               Sportz
             </h1>
-            <p className="text-dark text-sm font-medium opacity-70">
+            <p className="text-sm font-medium text-dark opacity-70">
               Real-time match data demo
             </p>
           </div>
-          <div className="status-badge border-dark flex items-center gap-2 rounded-[100px] border-2 bg-white px-5 py-3 text-sm font-semibold shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+          <div className="status-badge flex items-center gap-2 rounded-[100px] border-2 border-dark bg-white px-5 py-3 text-sm font-semibold shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
             <div
               className={cn(
                 "status-dot size-2.5 rounded-full",
@@ -250,13 +250,13 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
       )}
 
       {hasMatches && (
-        <div className="animate-fade-in grid grid-cols-1 gap-6 py-8 min-[1200px]:grid-cols-[1fr_420px]">
+        <div className="grid animate-fade-in grid-cols-1 gap-6 py-8 min-[1200px]:grid-cols-[1fr_420px]">
           <div className="matches-section">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-[28px] font-bold -tracking-[1px]">
                 Current Matches
               </h2>
-              <div className="api-badge bg-dark font-space-mono rounded-[20px] px-3.5 py-1.5 text-[13px] font-bold text-white">
+              <div className="api-badge rounded-[20px] bg-dark px-3.5 py-1.5 font-space-mono text-[13px] font-bold text-white">
                 API: {matches.length}
               </div>
             </div>

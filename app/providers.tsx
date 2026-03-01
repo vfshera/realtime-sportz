@@ -9,13 +9,13 @@ import {
   useMemo,
   useRef,
 } from "react";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 import type { Match } from "./.server/db/schema";
 import {
   type ClientMessage,
   type ServerMessage,
   serverMessageSchema,
 } from "./validations/transport/messages";
-import useWebSocket, { ReadyState } from "react-use-websocket";
 
 type PayloadOf<T extends ServerMessage["type"]> = Extract<
   ServerMessage,

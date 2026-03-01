@@ -1,4 +1,10 @@
 import type { Route } from "./+types/api.commentary.$commentaryId";
+import { appContext } from "$/server/context";
+import z from "zod";
+import {
+  fullUpdateCommentarySchema,
+  updateCommentarySchema,
+} from "~/validations/commentary";
 import type { NewCommentary } from "~/.server/db/schema/commentary";
 import { commentaryService } from "~/.server/services";
 import {
@@ -7,12 +13,6 @@ import {
   resultToResponse,
   validationError,
 } from "~/utils/api.server";
-import {
-  fullUpdateCommentarySchema,
-  updateCommentarySchema,
-} from "~/validations/commentary";
-import { appContext } from "$/server/context";
-import z from "zod";
 
 export async function action({ request, params, context }: Route.ActionArgs) {
   const { log } = context.get(appContext);

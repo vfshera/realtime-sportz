@@ -1,4 +1,5 @@
 import { EXTRA_TIME_RANGES } from "../constants";
+import { CommentaryTemplate } from "./base";
 import type {
   CommentaryEvent,
   FootballExtraTime,
@@ -6,7 +7,6 @@ import type {
   ScoreEvent,
   SportPlayerPool,
 } from "../types";
-import { CommentaryTemplate } from "./base";
 
 export class FootballTemplate extends CommentaryTemplate {
   readonly sport = "football";

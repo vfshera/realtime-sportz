@@ -1,11 +1,11 @@
 import { OVERTIME_DURATION } from "../constants";
+import { CommentaryTemplate } from "./base";
 import type {
   CommentaryEvent,
   MatchInfo,
   ScoreEvent,
   SportPlayerPool,
 } from "../types";
-import { CommentaryTemplate } from "./base";
 
 export class BasketballTemplate extends CommentaryTemplate {
   readonly sport = "basketball";

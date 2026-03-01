@@ -1,12 +1,12 @@
-import type { MatchStatus } from "~/utils/match";
-import type { Match } from "../db/schema";
+import { log } from "$/server/logger";
 import { commentaryService, matchService } from "../services";
+import { BASE_DELAY_PER_MINUTE_MS } from "./constants";
 import { playerPoolManager } from "./PlayerPoolManager";
 import { ScoreDistributor } from "./ScoreDistributor";
-import { BASE_DELAY_PER_MINUTE_MS } from "./constants";
 import { createTemplate, getTemplateDuration } from "./templates";
+import type { Match } from "../db/schema";
 import type { CommentaryEvent, MatchInfo, ScorePrediction } from "./types";
-import { log } from "$/server/logger";
+import type { MatchStatus } from "~/utils/match";
 
 type SimulationCallbacks = {
   onTimerCreated: (timer: NodeJS.Timeout) => void;

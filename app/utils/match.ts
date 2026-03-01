@@ -31,7 +31,6 @@ export function getMatchStatus(
 
   return MATCH_STATUS.LIVE;
 }
-
 export async function syncMatchStatus(
   match: Match,
   updateStatus: (status: MatchStatus) => Promise<void>,

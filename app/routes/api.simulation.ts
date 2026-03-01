@@ -1,8 +1,8 @@
 import type { Route } from "./+types/api.simulation";
 import { data, useFetcher } from "react-router";
+import { appContext } from "$/server/context";
 import { simulation } from "~/.server/simulator";
 import type { ApiError, ApiSuccess } from "~/utils/api.server";
-import { appContext } from "$/server/context";
 
 export type SimulationActionIntent = "start" | "stop" | "restart" | "setSpeed";
 

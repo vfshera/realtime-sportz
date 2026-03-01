@@ -1,9 +1,9 @@
-import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
-import type { DefaultOmit } from "../types";
-import { primaryKeyCuid2, timestamps } from "../utils";
-import commentary from "./commentary";
 import { relations, sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
+import { primaryKeyCuid2, timestamps } from "../utils";
+import commentary from "./commentary";
+import type { DefaultOmit } from "../types";
 
 export const matches = sqliteTable(
   "matches",

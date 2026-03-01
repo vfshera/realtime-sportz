@@ -1,5 +1,5 @@
-import type { CommentaryEvent, ScoreEvent } from "../types";
 import { CommentaryTemplate } from "./base";
+import type { CommentaryEvent, ScoreEvent } from "../types";
 
 export class CricketTemplate extends CommentaryTemplate {
   readonly sport = "cricket";

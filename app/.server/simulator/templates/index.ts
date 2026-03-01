@@ -1,3 +1,6 @@
+import { BasketballTemplate } from "./basketball";
+import { CricketTemplate } from "./cricket";
+import { FootballTemplate } from "./football";
 import type {
   CommentaryEvent,
   MatchInfo,
@@ -5,9 +8,6 @@ import type {
   Sport,
   SportPlayerPool,
 } from "../types";
-import { BasketballTemplate } from "./basketball";
-import { CricketTemplate } from "./cricket";
-import { FootballTemplate } from "./football";
 
 export { CommentaryTemplate } from "./base";
 

@@ -1,10 +1,10 @@
-import { env } from "~/env.server";
-import type { NodeWSContext } from "~/types/ws";
-import type { ServerMessage } from "~/validations/transport/messages";
-import type { AppBindings } from "./types";
 import { log } from "$/server/logger";
 import { getConnInfo } from "@hono/node-server/conninfo";
+import { env } from "~/env.server";
+import type { AppBindings } from "./types";
 import type { Context } from "hono";
+import type { NodeWSContext } from "~/types/ws";
+import type { ServerMessage } from "~/validations/transport/messages";
 
 /**
  * Send a message to a WebSocket client

@@ -1,7 +1,7 @@
-import { env } from "~/env.server";
-import type { AppBindings } from "./types";
 import { createRequestLogger, initLogger, log } from "evlog";
 import { createMiddleware } from "hono/factory";
+import { env } from "~/env.server";
+import type { AppBindings } from "./types";
 
 initLogger({
   env: { service: env.PUBLIC_APP_NAME, environment: env.NODE_ENV },

@@ -1,7 +1,3 @@
-import { env } from "~/env.server";
-import type { NodeWSContext } from "~/types/ws";
-import { getRealIp, sendMessage } from "./helpers";
-import type { AppBindings } from "./types";
 import { uaBlocker } from "@hono/ua-blocker";
 import {
   useAiRobotsTxt as aiRobotsTxt,
@@ -10,6 +6,10 @@ import {
 import { rateLimiter, webSocketLimiter } from "hono-rate-limiter";
 import { createMiddleware } from "hono/factory";
 import { isbot } from "isbot";
+import { env } from "~/env.server";
+import { getRealIp, sendMessage } from "./helpers";
+import type { AppBindings } from "./types";
+import type { NodeWSContext } from "~/types/ws";
 
 /**
  * Generic bot blocker — blocks unknown scrapers/scanners.

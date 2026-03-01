@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { log } from "$/server/logger";
+import { sendMessage } from "../helpers";
 import type { NodeWSContext } from "~/types/ws";
 import type { ServerMessage } from "~/validations/transport/messages";
-import { sendMessage } from "../helpers";
-import { log } from "$/server/logger";
 
 class MatchPubSub {
   #matchRooms = new Map<string, Set<NodeWSContext>>();

@@ -1,4 +1,7 @@
 import type { Route } from "./+types/api.matches";
+import { appContext } from "$/server/context";
+import z from "zod";
+import { createMatchSchema } from "~/validations/matches";
 import { matchService } from "~/.server/services";
 import {
   methodNotAllowed,
@@ -6,9 +9,6 @@ import {
   resultToResponse,
   validationError,
 } from "~/utils/api.server";
-import { createMatchSchema } from "~/validations/matches";
-import { appContext } from "$/server/context";
-import z from "zod";
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {

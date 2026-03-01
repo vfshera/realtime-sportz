@@ -1,7 +1,7 @@
-import matches from "~/.server/db/schema/matches";
-import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { MATCH_STATUS, type MatchStatus } from "~/utils/match";
+import matches from "~/.server/db/schema/matches";
 
 const baseInsertMatchSchema = createInsertSchema(matches, {
   status: z.enum(
