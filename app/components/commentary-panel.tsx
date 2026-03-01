@@ -129,31 +129,33 @@ export function CommentaryPanel({
 
 export function EmptyCommentaryPanel() {
   return (
-    <div className="flex h-full max-h-[calc(100vh-180px)] flex-col items-center justify-center rounded-2xl border-3 border-dotted border-dark p-6">
-      <div className="max-w-sm text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-black bg-yellow-300">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              strokeWidth={2}
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="size-8 text-gray-900"
-            >
-              <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" />
-              <rect x="2" y="6" width="14" height="12" rx="2" />
-            </svg>
+    <div className="flex h-full max-h-[calc(100vh-180px)] flex-col justify-center rounded-2xl border-3 border-dotted border-dark p-6 md:items-center">
+      <div className="max-w-sm md:text-center">
+        <div className="flex items-center gap-4 md:contents">
+          <div className="flex justify-center md:mb-6">
+            <div className="flex size-14 items-center justify-center rounded-full border-2 border-black bg-yellow-300 md:size-16">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                strokeWidth={2}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-8 text-gray-900"
+              >
+                <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" />
+                <rect x="2" y="6" width="14" height="12" rx="2" />
+              </svg>
+            </div>
           </div>
+          <h3 className="text-2xl font-bold text-gray-900 md:mb-3">
+            No Match Selected
+          </h3>
         </div>
-        <h3 className="mb-3 text-2xl font-bold text-gray-900">
-          No Match Selected
-        </h3>
-        <p className="leading-relaxed text-gray-500">
+        <p className="leading-normal text-gray-900 max-md:mt-3 md:leading-relaxed md:text-gray-500">
           Select a match from the list to view live commentary and real-time
           updates.
         </p>

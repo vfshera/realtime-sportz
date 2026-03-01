@@ -1,7 +1,6 @@
 import type { Route } from "./+types/_index";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { appContext } from "$/server/context";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ClientOnly } from "remix-utils/client-only";
 import {
   CommentaryPanel,
@@ -73,8 +72,6 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
     () => [...matches].sort(latestMatchSort),
     [matches],
   );
-
-  const [matchGridRef] = useAutoAnimate({ duration: 500 });
 
   const allMatchesFinished = useMemo(() => {
     return matches.every((m) => m.status === "finished") && matches.length > 0;
@@ -192,11 +189,11 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
   );
 
   return (
-    <main className="mx-auto w-full max-w-300 pt-8">
+    <main className="mx-auto w-full max-w-300 px-4 pt-8 min-[1200px]:px-0 md:px-6">
       <header className="animate-slide-down rounded-2xl border-3 border-b-4 border-dark bg-yellow px-5 py-7 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[2rem] font-extrabold -tracking-[2px] text-dark md:text-4xl">
+            <h1 className="text-[2rem]/[1.2] font-extrabold -tracking-[2px] text-dark md:text-4xl">
               Sportz
             </h1>
             <p className="text-sm font-medium text-dark opacity-70">
@@ -250,8 +247,8 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
       )}
 
       {hasMatches && (
-        <div className="grid animate-fade-in grid-cols-1 gap-6 py-8 min-[1200px]:grid-cols-[1fr_420px]">
-          <div className="matches-section">
+        <div className="grid animate-fade-in grid-cols-1 gap-6 py-2 min-[1200px]:grid-cols-[1fr_420px] md:py-8">
+          <div className="matches-section order-2 min-[1200px]:order-1">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-[28px] font-bold -tracking-[1px]">
                 Current Matches
@@ -261,7 +258,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
               </div>
             </div>
 
-            <div ref={matchGridRef} className="grid gap-5 xl:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-2">
               {sortedMatches.map((match) => (
                 <MatchCard
                   key={match.id}
@@ -273,7 +270,7 @@ function HomePage({ todaysMatches }: Route.ComponentProps["loaderData"]) {
             </div>
           </div>
 
-          <div>
+          <div className="order-1 min-[1200px]:order-2">
             {selectedMatch ? (
               <CommentaryPanel
                 selectedMatch={selectedMatch}
